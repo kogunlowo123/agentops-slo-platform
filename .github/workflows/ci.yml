@@ -92,7 +92,7 @@ jobs:
             deployments/otel-collector/collector.yaml deployments/docker/otel-collector.yaml \
             configs/prometheus/alerts.yaml configs/slos.yaml docker-compose.yml
           python3 -c "import json; json.load(open('configs/grafana/agentops-slo-platform.json'))"
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.9.8
       - name: Terraform fmt and validate (aws, azure, gcp)
