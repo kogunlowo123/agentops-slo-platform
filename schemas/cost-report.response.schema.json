@@ -1,0 +1,98 @@
+{
+  "$defs": {
+    "CostGrouping": {
+      "enum": [
+        "agent",
+        "team",
+        "model",
+        "workflow"
+      ],
+      "title": "CostGrouping",
+      "type": "string"
+    },
+    "CostRow": {
+      "properties": {
+        "cached_input_tokens": {
+          "title": "Cached Input Tokens",
+          "type": "integer"
+        },
+        "cost_usd": {
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "input_tokens": {
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "model_calls": {
+          "title": "Model Calls",
+          "type": "integer"
+        },
+        "output_tokens": {
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "unpriced_calls": {
+          "description": "Model calls with tokens but no applicable price",
+          "title": "Unpriced Calls",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "key",
+        "model_calls",
+        "input_tokens",
+        "output_tokens",
+        "cached_input_tokens",
+        "cost_usd",
+        "unpriced_calls"
+      ],
+      "title": "CostRow",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/cost-report.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "currency": {
+      "default": "USD",
+      "title": "Currency",
+      "type": "string"
+    },
+    "end_ns": {
+      "title": "End Ns",
+      "type": "integer"
+    },
+    "group_by": {
+      "$ref": "#/$defs/CostGrouping"
+    },
+    "rows": {
+      "items": {
+        "$ref": "#/$defs/CostRow"
+      },
+      "title": "Rows",
+      "type": "array"
+    },
+    "start_ns": {
+      "title": "Start Ns",
+      "type": "integer"
+    },
+    "total_cost_usd": {
+      "title": "Total Cost Usd",
+      "type": "number"
+    }
+  },
+  "required": [
+    "group_by",
+    "start_ns",
+    "end_ns",
+    "total_cost_usd",
+    "rows"
+  ],
+  "title": "CostReport",
+  "type": "object"
+}

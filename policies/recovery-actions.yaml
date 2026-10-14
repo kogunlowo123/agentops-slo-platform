@@ -1,0 +1,53 @@
+# Recovery action policy (POST /v1/recovery/actions, MCP propose_recovery_action).
+# Combining: deny overrides, then require_approval, then allow; default deny.
+# An allowed action becomes an active directive for its TTL; require_approval
+# waits for an SRE other than the proposer; deny is recorded and dropped.
+# Action risk (fixed in code): retry_policy.apply LOW, circuit.close MODERATE,
+# circuit.open HIGH, budget.raise HIGH, agent.pause CRITICAL.
+# Subject: kind (user | agent), roles (operators), scopes (agents).
+# environment.parameters: the validated action parameters.
+name: recovery-actions
+version: "2026.10.0"
+rules:
+  - id: deny-agent-pause-by-agents
+    description: Agents may not propose pausing an agent; only operators can.
+    effect: deny
+    actions: ["recovery:agent.pause"]
+    conditions:
+      - {attribute: subject.kind, operator: eq, value: agent}
+
+  - id: approve-high-and-critical-risk
+    description: Opening circuits, raising budgets and pausing agents need a human.
+    effect: require_approval
+    actions: ["recovery:*"]
+    conditions:
+      - {attribute: risk, operator: gte, value: 3}
+
+  - id: approve-aggressive-retries
+    description: More than three attempts multiplies load on a struggling dependency.
+    effect: require_approval
+    actions: ["recovery:retry_policy.apply"]
+    conditions:
+      - {attribute: environment.parameters.max_attempts, operator: gt, value: 3}
+
+  - id: approve-circuit-close-by-agents
+    description: Closing a circuit restores full traffic; an SRE confirms agent proposals.
+    effect: require_approval
+    actions: ["recovery:circuit.close"]
+    conditions:
+      - {attribute: subject.kind, operator: eq, value: agent}
+
+  - id: allow-sre-low-and-moderate-risk
+    description: SREs may apply retry policies and close circuits directly.
+    effect: allow
+    actions: ["recovery:retry_policy.apply", "recovery:circuit.close"]
+    conditions:
+      - {attribute: subject.kind, operator: eq, value: user}
+      - {attribute: subject.roles, operator: contains, value: agentops-sre}
+
+  - id: allow-agent-retry-policy
+    description: Agents may tighten their own retry behaviour within the guardrails.
+    effect: allow
+    actions: ["recovery:retry_policy.apply"]
+    conditions:
+      - {attribute: subject.kind, operator: eq, value: agent}

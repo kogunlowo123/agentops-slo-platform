@@ -1,0 +1,1273 @@
+{
+  "tools": [
+    {
+      "description": "Token usage and attributed model spend for the last ``hours`` hours.",
+      "inputSchema": {
+        "$defs": {
+          "CostGrouping": {
+            "enum": [
+              "agent",
+              "team",
+              "model",
+              "workflow"
+            ],
+            "title": "CostGrouping",
+            "type": "string"
+          }
+        },
+        "properties": {
+          "group_by": {
+            "$ref": "#/$defs/CostGrouping",
+            "description": "agent, team, model or workflow"
+          },
+          "hours": {
+            "default": 24,
+            "description": "Look-back window",
+            "maximum": 2232,
+            "minimum": 1,
+            "title": "Hours",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group_by"
+        ],
+        "title": "cost_reportArguments",
+        "type": "object"
+      },
+      "name": "cost_report",
+      "outputSchema": {
+        "$defs": {
+          "CostGrouping": {
+            "enum": [
+              "agent",
+              "team",
+              "model",
+              "workflow"
+            ],
+            "title": "CostGrouping",
+            "type": "string"
+          },
+          "CostRow": {
+            "properties": {
+              "cached_input_tokens": {
+                "title": "Cached Input Tokens",
+                "type": "integer"
+              },
+              "cost_usd": {
+                "title": "Cost Usd",
+                "type": "number"
+              },
+              "input_tokens": {
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "key": {
+                "title": "Key",
+                "type": "string"
+              },
+              "model_calls": {
+                "title": "Model Calls",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "title": "Output Tokens",
+                "type": "integer"
+              },
+              "unpriced_calls": {
+                "description": "Model calls with tokens but no applicable price",
+                "title": "Unpriced Calls",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "key",
+              "model_calls",
+              "input_tokens",
+              "output_tokens",
+              "cached_input_tokens",
+              "cost_usd",
+              "unpriced_calls"
+            ],
+            "title": "CostRow",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "currency": {
+            "default": "USD",
+            "title": "Currency",
+            "type": "string"
+          },
+          "end_ns": {
+            "title": "End Ns",
+            "type": "integer"
+          },
+          "group_by": {
+            "$ref": "#/$defs/CostGrouping"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/CostRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "start_ns": {
+            "title": "Start Ns",
+            "type": "integer"
+          },
+          "total_cost_usd": {
+            "title": "Total Cost Usd",
+            "type": "number"
+          }
+        },
+        "required": [
+          "group_by",
+          "start_ns",
+          "end_ns",
+          "total_cost_usd",
+          "rows"
+        ],
+        "title": "CostReport",
+        "type": "object"
+      },
+      "title": "Cost report"
+    },
+    {
+      "description": "Burn-rate alerts currently firing across all SLOs.",
+      "inputSchema": {
+        "properties": {},
+        "title": "firing_alertsArguments",
+        "type": "object"
+      },
+      "name": "firing_alerts",
+      "outputSchema": {
+        "$defs": {
+          "FiringAlert": {
+            "properties": {
+              "rule_id": {
+                "title": "Rule Id",
+                "type": "string"
+              },
+              "severity": {
+                "title": "Severity",
+                "type": "string"
+              },
+              "since_ns": {
+                "title": "Since Ns",
+                "type": "integer"
+              },
+              "slo_id": {
+                "title": "Slo Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "slo_id",
+              "rule_id",
+              "severity",
+              "since_ns"
+            ],
+            "title": "FiringAlert",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/$defs/FiringAlert"
+            },
+            "title": "Alerts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "alerts"
+        ],
+        "title": "FiringAlerts",
+        "type": "object"
+      },
+      "title": "Firing SLO alerts"
+    },
+    {
+      "description": "Propose a recovery action. Policy decides: active, pending human approval, or denied.",
+      "inputSchema": {
+        "$defs": {
+          "ActionType": {
+            "enum": [
+              "retry_policy.apply",
+              "circuit.open",
+              "circuit.close",
+              "agent.pause",
+              "budget.raise"
+            ],
+            "title": "ActionType",
+            "type": "string"
+          },
+          "SpanKind": {
+            "enum": [
+              "agent",
+              "tool",
+              "model",
+              "memory",
+              "workflow",
+              "other"
+            ],
+            "title": "SpanKind",
+            "type": "string"
+          }
+        },
+        "properties": {
+          "action": {
+            "$ref": "#/$defs/ActionType"
+          },
+          "parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parameters"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 5,
+            "title": "Reason",
+            "type": "string"
+          },
+          "target_kind": {
+            "$ref": "#/$defs/SpanKind"
+          },
+          "target_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Target Name",
+            "type": "string"
+          },
+          "ttl_minutes": {
+            "default": 60,
+            "maximum": 10080,
+            "minimum": 1,
+            "title": "Ttl Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "action",
+          "target_kind",
+          "target_name",
+          "reason"
+        ],
+        "title": "propose_recovery_actionArguments",
+        "type": "object"
+      },
+      "name": "propose_recovery_action",
+      "outputSchema": {
+        "$defs": {
+          "ActionStatus": {
+            "enum": [
+              "active",
+              "pending_approval",
+              "denied",
+              "rejected",
+              "expired"
+            ],
+            "title": "ActionStatus",
+            "type": "string"
+          },
+          "ActionTarget": {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/SpanKind"
+              },
+              "name": {
+                "maxLength": 120,
+                "minLength": 1,
+                "title": "Name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "name"
+            ],
+            "title": "ActionTarget",
+            "type": "object"
+          },
+          "ActionType": {
+            "enum": [
+              "retry_policy.apply",
+              "circuit.open",
+              "circuit.close",
+              "agent.pause",
+              "budget.raise"
+            ],
+            "title": "ActionType",
+            "type": "string"
+          },
+          "Decision": {
+            "description": "Outcome of a policy or security evaluation.",
+            "enum": [
+              "allow",
+              "deny",
+              "require_approval"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "RiskLevel": {
+            "description": "Action risk tier. Ordered so policies can compare with ``>=``.",
+            "enum": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "title": "RiskLevel",
+            "type": "integer"
+          },
+          "SpanKind": {
+            "enum": [
+              "agent",
+              "tool",
+              "model",
+              "memory",
+              "workflow",
+              "other"
+            ],
+            "title": "SpanKind",
+            "type": "string"
+          }
+        },
+        "properties": {
+          "action": {
+            "$ref": "#/$defs/ActionType"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Decided By"
+          },
+          "decided_ns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Decided Ns"
+          },
+          "decision": {
+            "$ref": "#/$defs/Decision"
+          },
+          "expires_ns": {
+            "title": "Expires Ns",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "matched_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Rules",
+            "type": "array"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "policy_digest": {
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "proposed_by": {
+            "title": "Proposed By",
+            "type": "string"
+          },
+          "proposed_ns": {
+            "title": "Proposed Ns",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "risk": {
+            "$ref": "#/$defs/RiskLevel"
+          },
+          "status": {
+            "$ref": "#/$defs/ActionStatus"
+          },
+          "target": {
+            "$ref": "#/$defs/ActionTarget"
+          },
+          "ttl_minutes": {
+            "title": "Ttl Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "target",
+          "parameters",
+          "reason",
+          "risk",
+          "status",
+          "decision",
+          "matched_rules",
+          "policy_version",
+          "policy_digest",
+          "proposed_by",
+          "proposed_ns",
+          "expires_ns",
+          "ttl_minutes"
+        ],
+        "title": "RecoveryAction",
+        "type": "object"
+      },
+      "title": "Propose recovery action"
+    },
+    {
+      "description": "Derived retry policy and circuit-breaker state for a dependency.",
+      "inputSchema": {
+        "$defs": {
+          "SpanKind": {
+            "enum": [
+              "agent",
+              "tool",
+              "model",
+              "memory",
+              "workflow",
+              "other"
+            ],
+            "title": "SpanKind",
+            "type": "string"
+          }
+        },
+        "properties": {
+          "kind": {
+            "$ref": "#/$defs/SpanKind",
+            "description": "tool, model or memory"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name"
+        ],
+        "title": "recovery_recommendationArguments",
+        "type": "object"
+      },
+      "name": "recovery_recommendation",
+      "outputSchema": {
+        "$defs": {
+          "CircuitRecommendation": {
+            "properties": {
+              "long_calls": {
+                "title": "Long Calls",
+                "type": "integer"
+              },
+              "long_error_rate": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Long Error Rate"
+              },
+              "long_window_minutes": {
+                "title": "Long Window Minutes",
+                "type": "integer"
+              },
+              "min_calls": {
+                "title": "Min Calls",
+                "type": "integer"
+              },
+              "open_threshold": {
+                "title": "Open Threshold",
+                "type": "number"
+              },
+              "reason": {
+                "title": "Reason",
+                "type": "string"
+              },
+              "short_calls": {
+                "title": "Short Calls",
+                "type": "integer"
+              },
+              "short_error_rate": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Short Error Rate"
+              },
+              "short_window_minutes": {
+                "title": "Short Window Minutes",
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/CircuitState"
+              }
+            },
+            "required": [
+              "state",
+              "short_window_minutes",
+              "long_window_minutes",
+              "short_calls",
+              "short_error_rate",
+              "long_calls",
+              "long_error_rate",
+              "open_threshold",
+              "min_calls",
+              "reason"
+            ],
+            "title": "CircuitRecommendation",
+            "type": "object"
+          },
+          "CircuitState": {
+            "enum": [
+              "closed",
+              "half_open",
+              "open"
+            ],
+            "title": "CircuitState",
+            "type": "string"
+          },
+          "DependencyStats": {
+            "properties": {
+              "calls": {
+                "title": "Calls",
+                "type": "integer"
+              },
+              "error_rate": {
+                "title": "Error Rate",
+                "type": "number"
+              },
+              "failures": {
+                "title": "Failures",
+                "type": "integer"
+              },
+              "kind": {
+                "$ref": "#/$defs/SpanKind"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "p50_ms": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "P50 Ms"
+              },
+              "p95_ms": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "P95 Ms"
+              },
+              "p99_ms": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "P99 Ms"
+              },
+              "retried_failures": {
+                "title": "Retried Failures",
+                "type": "integer"
+              },
+              "retry_success_rate": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Retry Success Rate"
+              },
+              "retryable_failure_share": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Retryable Failure Share"
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "calls",
+              "failures",
+              "error_rate",
+              "retryable_failure_share",
+              "retried_failures",
+              "retry_success_rate",
+              "p50_ms",
+              "p95_ms",
+              "p99_ms"
+            ],
+            "title": "DependencyStats",
+            "type": "object"
+          },
+          "RetryPolicy": {
+            "properties": {
+              "backoff_multiplier": {
+                "minimum": 1,
+                "title": "Backoff Multiplier",
+                "type": "number"
+              },
+              "initial_backoff_ms": {
+                "minimum": 0,
+                "title": "Initial Backoff Ms",
+                "type": "integer"
+              },
+              "jitter": {
+                "default": "full",
+                "title": "Jitter",
+                "type": "string"
+              },
+              "max_attempts": {
+                "maximum": 5,
+                "minimum": 1,
+                "title": "Max Attempts",
+                "type": "integer"
+              },
+              "max_backoff_ms": {
+                "minimum": 0,
+                "title": "Max Backoff Ms",
+                "type": "integer"
+              },
+              "per_attempt_timeout_ms": {
+                "anyOf": [
+                  {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Per Attempt Timeout Ms"
+              },
+              "rationale": {
+                "title": "Rationale",
+                "type": "string"
+              }
+            },
+            "required": [
+              "max_attempts",
+              "initial_backoff_ms",
+              "backoff_multiplier",
+              "max_backoff_ms",
+              "rationale"
+            ],
+            "title": "RetryPolicy",
+            "type": "object"
+          },
+          "SpanKind": {
+            "enum": [
+              "agent",
+              "tool",
+              "model",
+              "memory",
+              "workflow",
+              "other"
+            ],
+            "title": "SpanKind",
+            "type": "string"
+          }
+        },
+        "properties": {
+          "circuit": {
+            "$ref": "#/$defs/CircuitRecommendation"
+          },
+          "retry_policy": {
+            "$ref": "#/$defs/RetryPolicy"
+          },
+          "stats": {
+            "$ref": "#/$defs/DependencyStats"
+          }
+        },
+        "required": [
+          "stats",
+          "retry_policy",
+          "circuit"
+        ],
+        "title": "RecoveryRecommendation",
+        "type": "object"
+      },
+      "title": "Recovery recommendation"
+    },
+    {
+      "description": "Error budget, burn rates per window and burn-rate rule state of one SLO.",
+      "inputSchema": {
+        "properties": {
+          "slo_id": {
+            "description": "SLO identifier",
+            "pattern": "^[a-z0-9]([a-z0-9\\-]{0,62}[a-z0-9])?$",
+            "title": "Slo Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slo_id"
+        ],
+        "title": "slo_statusArguments",
+        "type": "object"
+      },
+      "name": "slo_status",
+      "outputSchema": {
+        "$defs": {
+          "RuleEvaluation": {
+            "properties": {
+              "factor": {
+                "title": "Factor",
+                "type": "number"
+              },
+              "firing": {
+                "title": "Firing",
+                "type": "boolean"
+              },
+              "long_burn": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Long Burn"
+              },
+              "long_window": {
+                "title": "Long Window",
+                "type": "string"
+              },
+              "rule_id": {
+                "title": "Rule Id",
+                "type": "string"
+              },
+              "severity": {
+                "$ref": "#/$defs/Severity"
+              },
+              "short_burn": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Short Burn"
+              },
+              "short_window": {
+                "title": "Short Window",
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule_id",
+              "severity",
+              "factor",
+              "long_window",
+              "short_window",
+              "long_burn",
+              "short_burn",
+              "firing"
+            ],
+            "title": "RuleEvaluation",
+            "type": "object"
+          },
+          "Severity": {
+            "enum": [
+              "page",
+              "ticket"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "SliType": {
+            "enum": [
+              "availability",
+              "latency",
+              "workflow_success"
+            ],
+            "title": "SliType",
+            "type": "string"
+          },
+          "SloHealth": {
+            "enum": [
+              "ok",
+              "warning",
+              "critical",
+              "no_data"
+            ],
+            "title": "SloHealth",
+            "type": "string"
+          },
+          "WindowBurn": {
+            "properties": {
+              "bad": {
+                "title": "Bad",
+                "type": "integer"
+              },
+              "burn_rate": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "None when below min_events",
+                "title": "Burn Rate"
+              },
+              "error_ratio": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Error Ratio"
+              },
+              "total": {
+                "title": "Total",
+                "type": "integer"
+              },
+              "window": {
+                "title": "Window",
+                "type": "string"
+              }
+            },
+            "required": [
+              "window",
+              "total",
+              "bad",
+              "error_ratio",
+              "burn_rate"
+            ],
+            "title": "WindowBurn",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "bad_events": {
+            "title": "Bad Events",
+            "type": "integer"
+          },
+          "error_budget_remaining": {
+            "description": "1.0 = untouched, 0 = exhausted, negative = overspent",
+            "title": "Error Budget Remaining",
+            "type": "number"
+          },
+          "evaluated_at_ns": {
+            "title": "Evaluated At Ns",
+            "type": "integer"
+          },
+          "health": {
+            "$ref": "#/$defs/SloHealth"
+          },
+          "objective": {
+            "title": "Objective",
+            "type": "number"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/$defs/RuleEvaluation"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "sli": {
+            "$ref": "#/$defs/SliType"
+          },
+          "sli_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Good-event ratio over the SLO window",
+            "title": "Sli Value"
+          },
+          "slo_id": {
+            "title": "Slo Id",
+            "type": "string"
+          },
+          "time_to_exhaustion_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "At the 1-hour burn rate; None when not burning",
+            "title": "Time To Exhaustion Hours"
+          },
+          "total_events": {
+            "title": "Total Events",
+            "type": "integer"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/$defs/WindowBurn"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "slo_id",
+          "sli",
+          "objective",
+          "window_days",
+          "health",
+          "total_events",
+          "bad_events",
+          "sli_value",
+          "error_budget_remaining",
+          "time_to_exhaustion_hours",
+          "windows",
+          "rules",
+          "evaluated_at_ns"
+        ],
+        "title": "SloStatus",
+        "type": "object"
+      },
+      "title": "SLO status"
+    },
+    {
+      "description": "Outcome, failure class, root-cause span and recovery strategy for one trace.",
+      "inputSchema": {
+        "properties": {
+          "trace_id": {
+            "description": "32 hex trace ID",
+            "pattern": "^[0-9a-f]{32}$",
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id"
+        ],
+        "title": "workflow_diagnosisArguments",
+        "type": "object"
+      },
+      "name": "workflow_diagnosis",
+      "outputSchema": {
+        "$defs": {
+          "Diagnosis": {
+            "properties": {
+              "agent": {
+                "title": "Agent",
+                "type": "string"
+              },
+              "cost_usd": {
+                "minimum": 0,
+                "title": "Cost Usd",
+                "type": "number"
+              },
+              "ended_ns": {
+                "title": "Ended Ns",
+                "type": "integer"
+              },
+              "error_count": {
+                "minimum": 0,
+                "title": "Error Count",
+                "type": "integer"
+              },
+              "failure_class": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FailureClass"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "model_calls": {
+                "minimum": 0,
+                "title": "Model Calls",
+                "type": "integer"
+              },
+              "observed_failure_classes": {
+                "default": [],
+                "items": {
+                  "$ref": "#/$defs/FailureClass"
+                },
+                "title": "Observed Failure Classes",
+                "type": "array"
+              },
+              "outcome": {
+                "$ref": "#/$defs/Outcome"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              },
+              "recovery": {
+                "default": [],
+                "items": {
+                  "$ref": "#/$defs/RecoveryStrategy"
+                },
+                "title": "Recovery",
+                "type": "array"
+              },
+              "retryable": {
+                "default": false,
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "root_cause_kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SpanKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "root_cause_name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Root Cause Name"
+              },
+              "root_cause_span_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Root Cause Span Id"
+              },
+              "span_count": {
+                "minimum": 0,
+                "title": "Span Count",
+                "type": "integer"
+              },
+              "started_ns": {
+                "title": "Started Ns",
+                "type": "integer"
+              },
+              "team": {
+                "title": "Team",
+                "type": "string"
+              },
+              "tool_calls": {
+                "minimum": 0,
+                "title": "Tool Calls",
+                "type": "integer"
+              },
+              "trace_id": {
+                "title": "Trace Id",
+                "type": "string"
+              },
+              "unpriced_model_calls": {
+                "minimum": 0,
+                "title": "Unpriced Model Calls",
+                "type": "integer"
+              },
+              "workflow": {
+                "title": "Workflow",
+                "type": "string"
+              }
+            },
+            "required": [
+              "trace_id",
+              "workflow",
+              "agent",
+              "team",
+              "outcome",
+              "span_count",
+              "error_count",
+              "tool_calls",
+              "model_calls",
+              "input_tokens",
+              "output_tokens",
+              "cost_usd",
+              "unpriced_model_calls",
+              "started_ns",
+              "ended_ns"
+            ],
+            "title": "Diagnosis",
+            "type": "object"
+          },
+          "FailureClass": {
+            "enum": [
+              "guardrail_blocked",
+              "rate_limited",
+              "timeout",
+              "authorization_denied",
+              "budget_exceeded",
+              "loop_detected",
+              "tool_error",
+              "model_error",
+              "memory_error",
+              "agent_error",
+              "unknown"
+            ],
+            "title": "FailureClass",
+            "type": "string"
+          },
+          "Outcome": {
+            "enum": [
+              "success",
+              "recovered",
+              "failed",
+              "incomplete"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "RecoveryStrategy": {
+            "enum": [
+              "retry_with_backoff",
+              "retry_honoring_retry_after",
+              "failover_to_alternate_dependency",
+              "open_circuit_on_dependency",
+              "fix_input_no_retry",
+              "escalate_to_human_review",
+              "terminate_and_cap_iterations",
+              "raise_budget_with_approval",
+              "check_agent_grants_no_retry"
+            ],
+            "title": "RecoveryStrategy",
+            "type": "string"
+          },
+          "SpanKind": {
+            "enum": [
+              "agent",
+              "tool",
+              "model",
+              "memory",
+              "workflow",
+              "other"
+            ],
+            "title": "SpanKind",
+            "type": "string"
+          }
+        },
+        "properties": {
+          "diagnosis": {
+            "$ref": "#/$defs/Diagnosis"
+          },
+          "finalized": {
+            "description": "False while spans may still arrive (provisional)",
+            "title": "Finalized",
+            "type": "boolean"
+          },
+          "trace_id": {
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "finalized",
+          "diagnosis"
+        ],
+        "title": "WorkflowView",
+        "type": "object"
+      },
+      "title": "Workflow diagnosis"
+    }
+  ]
+}

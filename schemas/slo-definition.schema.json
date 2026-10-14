@@ -1,0 +1,165 @@
+{
+  "$defs": {
+    "Selector": {
+      "additionalProperties": false,
+      "description": "Which events count toward an SLI. Unset fields match everything.",
+      "properties": {
+        "agent": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SpanKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Span kind; ignored for workflows"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tool, model, memory operation, agent or workflow name",
+          "title": "Name"
+        },
+        "team": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team"
+        }
+      },
+      "title": "Selector",
+      "type": "object"
+    },
+    "SliType": {
+      "enum": [
+        "availability",
+        "latency",
+        "workflow_success"
+      ],
+      "title": "SliType",
+      "type": "string"
+    },
+    "SpanKind": {
+      "enum": [
+        "agent",
+        "tool",
+        "model",
+        "memory",
+        "workflow",
+        "other"
+      ],
+      "title": "SpanKind",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/slo-definition.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Description",
+      "type": "string"
+    },
+    "id": {
+      "description": "Slug, e.g. claims-triage-tool-availability",
+      "title": "Id",
+      "type": "string"
+    },
+    "latency_threshold_ms": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "maximum": 3600000,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latency Threshold Ms"
+    },
+    "min_events": {
+      "default": 10,
+      "description": "Windows with fewer events are treated as no data and never alert",
+      "maximum": 100000,
+      "minimum": 1,
+      "title": "Min Events",
+      "type": "integer"
+    },
+    "name": {
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Name",
+      "type": "string"
+    },
+    "objective": {
+      "description": "Target good-event ratio, e.g. 0.995",
+      "exclusiveMaximum": 1.0,
+      "exclusiveMinimum": 0.5,
+      "title": "Objective",
+      "type": "number"
+    },
+    "owner": {
+      "description": "Team accountable for the SLO",
+      "maxLength": 120,
+      "minLength": 2,
+      "title": "Owner",
+      "type": "string"
+    },
+    "selector": {
+      "$ref": "#/$defs/Selector"
+    },
+    "sli": {
+      "$ref": "#/$defs/SliType"
+    },
+    "window_days": {
+      "default": 30,
+      "maximum": 90,
+      "minimum": 1,
+      "title": "Window Days",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "sli",
+    "objective",
+    "owner"
+  ],
+  "title": "SloDefinition",
+  "type": "object"
+}

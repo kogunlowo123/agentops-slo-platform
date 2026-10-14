@@ -1,0 +1,21 @@
+# Values used by CI to render and schema-validate the chart (helm lint,
+# helm template | kubeconform). They describe a complete, valid deployment.
+agentops:
+  publicUrl: https://agentops.agents.ci.internal
+  alertmanagerUrl: http://alertmanager.observability.svc.ci.internal:9093
+  mcpAllowedHosts: ["agentops.agents.ci.internal"]
+operator:
+  issuer: https://login.ci.internal
+  audience: agentops-slo-platform
+  jwksUrl: https://login.ci.internal/jwks
+fabric:
+  url: https://identity.agents.ci.internal
+  agentId: spiffe://agents.ci.internal/agent/observability/agentops-slo-platform
+secrets:
+  auditKeyFile: audit-2026-10.pem
+ingress:
+  enabled: true
+  className: nginx
+  host: agentops.agents.ci.internal
+serviceMonitor:
+  enabled: true

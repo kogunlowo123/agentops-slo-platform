@@ -1,0 +1,185 @@
+{
+  "$defs": {
+    "ActionStatus": {
+      "enum": [
+        "active",
+        "pending_approval",
+        "denied",
+        "rejected",
+        "expired"
+      ],
+      "title": "ActionStatus",
+      "type": "string"
+    },
+    "ActionTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SpanKind"
+        },
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "ActionTarget",
+      "type": "object"
+    },
+    "ActionType": {
+      "enum": [
+        "retry_policy.apply",
+        "circuit.open",
+        "circuit.close",
+        "agent.pause",
+        "budget.raise"
+      ],
+      "title": "ActionType",
+      "type": "string"
+    },
+    "Decision": {
+      "description": "Outcome of a policy or security evaluation.",
+      "enum": [
+        "allow",
+        "deny",
+        "require_approval"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "RiskLevel": {
+      "description": "Action risk tier. Ordered so policies can compare with ``>=``.",
+      "enum": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "title": "RiskLevel",
+      "type": "integer"
+    },
+    "SpanKind": {
+      "enum": [
+        "agent",
+        "tool",
+        "model",
+        "memory",
+        "workflow",
+        "other"
+      ],
+      "title": "SpanKind",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/recovery-action.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/ActionType"
+    },
+    "decided_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decided By"
+    },
+    "decided_ns": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Decided Ns"
+    },
+    "decision": {
+      "$ref": "#/$defs/Decision"
+    },
+    "expires_ns": {
+      "title": "Expires Ns",
+      "type": "integer"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "matched_rules": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Matched Rules",
+      "type": "array"
+    },
+    "parameters": {
+      "additionalProperties": true,
+      "title": "Parameters",
+      "type": "object"
+    },
+    "policy_digest": {
+      "title": "Policy Digest",
+      "type": "string"
+    },
+    "policy_version": {
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "proposed_by": {
+      "title": "Proposed By",
+      "type": "string"
+    },
+    "proposed_ns": {
+      "title": "Proposed Ns",
+      "type": "integer"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "risk": {
+      "$ref": "#/$defs/RiskLevel"
+    },
+    "status": {
+      "$ref": "#/$defs/ActionStatus"
+    },
+    "target": {
+      "$ref": "#/$defs/ActionTarget"
+    },
+    "ttl_minutes": {
+      "title": "Ttl Minutes",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "action",
+    "target",
+    "parameters",
+    "reason",
+    "risk",
+    "status",
+    "decision",
+    "matched_rules",
+    "policy_version",
+    "policy_digest",
+    "proposed_by",
+    "proposed_ns",
+    "expires_ns",
+    "ttl_minutes"
+  ],
+  "title": "RecoveryAction",
+  "type": "object"
+}

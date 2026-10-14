@@ -1,0 +1,43 @@
+# Access policy for agent callers when the platform runs without the identity
+# fabric (AGENTOPS_FABRIC_URL unset): credentials are verified against the
+# configured issuer's JWKS and this policy decides. With the fabric configured,
+# the fabric's own authorization policy makes the decision instead.
+# Combining: deny overrides, then require_approval, then allow; default deny.
+# Subject attributes: status, scopes, risk, max_classification, delegated,
+# action_in_scope (true when the action matches a credential scope; scopes may
+# use wildcards such as agentops:*.read).
+# risk: 1=LOW 2=MODERATE 3=HIGH 4=CRITICAL
+# classification: 0=PUBLIC 1=INTERNAL 2=CONFIDENTIAL 3=RESTRICTED
+name: agentops-access
+version: "2026.10.0"
+rules:
+  - id: deny-inactive-subjects
+    description: Suspended or revoked identities can do nothing.
+    effect: deny
+    actions: ["*"]
+    conditions:
+      - {attribute: subject.status, operator: in, value: [suspended, revoked]}
+
+  - id: deny-delegated-recovery-proposals
+    description: >-
+      A recovery proposal must come from the agent that observed the problem,
+      not from a delegate acting on its behalf.
+    effect: deny
+    actions: ["agentops:recovery.propose"]
+    conditions:
+      - {attribute: subject.delegated, operator: eq, value: true}
+
+  - id: deny-critical-risk-cost-access
+    description: Critical-risk agents may not read spend data.
+    effect: deny
+    actions: ["agentops:cost.read"]
+    conditions:
+      - {attribute: subject.risk, operator: gte, value: 4}
+
+  - id: allow-scoped-actions
+    description: An action is allowed when the credential carries it as a scope.
+    effect: allow
+    actions: ["agentops:*"]
+    conditions:
+      - {attribute: subject.status, operator: eq, value: active}
+      - {attribute: subject.action_in_scope, operator: eq, value: true}

@@ -1,0 +1,175 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --python ${{ matrix.python }}
+      - name: Lint and format
+        run: |
+          uv run ruff check src tests
+          uv run black --check src tests
+      - name: Type check
+        run: uv run python -m mypy
+      - name: Static security analysis
+        run: uv run python -m bandit -q -r src -c pyproject.toml
+      - name: Published contracts are current
+        run: uv run python -m agentops_slo_platform.contracts --check
+      - name: Unit, security, chaos, performance and e2e tests (coverage gate 90%)
+        run: uv run pytest --cov-report=xml
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
+        with:
+          name: coverage
+          path: coverage.xml
+
+  integration-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.4-alpine
+        env:
+          POSTGRES_DB: agentops
+          POSTGRES_USER: agentops
+          POSTGRES_PASSWORD: ci-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U agentops" --health-interval 5s --health-retries 10
+    env:
+      AGENTOPS_TEST_DATABASE_URL: postgresql+asyncpg://agentops:ci-only@localhost:5432/agentops
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.0
+      - run: uv sync --frozen
+      - run: uv run pytest tests/integration -m integration --no-cov -ra
+
+  deploy-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.2
+      - name: Helm lint and render
+        run: |
+          helm lint deployments/helm/agentops-slo-platform \
+            -f deployments/helm/agentops-slo-platform/ci/test-values.yaml
+          helm template agentops deployments/helm/agentops-slo-platform \
+            -f deployments/helm/agentops-slo-platform/ci/test-values.yaml > rendered.yaml
+          if helm template agentops deployments/helm/agentops-slo-platform > /dev/null 2>&1; then
+            echo "chart rendered without required values"; exit 1
+          fi
+      - name: Kubernetes schema validation (kubeconform)
+        run: |
+          curl -sSfL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -summary -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            rendered.yaml deployments/kubernetes/namespace.yaml deployments/kubernetes/external-secrets.yaml
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: Collector, alert rule and dashboard syntax
+        run: |
+          uv run --no-project --with pyyaml python -c "import sys, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:]]" \
+            deployments/otel-collector/collector.yaml deployments/docker/otel-collector.yaml \
+            configs/prometheus/alerts.yaml configs/slos.yaml docker-compose.yml
+          python3 -c "import json; json.load(open('configs/grafana/agentops-slo-platform.json'))"
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - name: Terraform fmt and validate (aws, azure, gcp)
+        run: |
+          terraform fmt -recursive -check deployments/terraform
+          for cloud in aws azure gcp; do
+            terraform -chdir=deployments/terraform/$cloud init -backend=false -input=false
+            terraform -chdir=deployments/terraform/$cloud validate
+          done
+      - name: IaC and Kubernetes misconfiguration scan (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: deployments
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t agentops-slo-platform:ci .
+      - name: Container smoke test (starts, reports ready, enforces auth)
+        run: |
+          docker run -d --name agentops -p 8080:8080 \
+            -e AGENTOPS_ENVIRONMENT=ci -e AGENTOPS_DEV_EPHEMERAL_KEYS=true \
+            -e AGENTOPS_PUBLIC_URL=http://localhost:8080 \
+            -e AGENTOPS_DATABASE_URL=sqlite+aiosqlite:////tmp/agentops.db \
+            -e AGENTOPS_AUDIT_LOG_PATH=/tmp/audit.jsonl \
+            -e AGENTOPS_OPERATOR_ISSUER=https://login.ci -e AGENTOPS_OPERATOR_AUDIENCE=agentops \
+            -e AGENTOPS_OPERATOR_JWKS_URL=https://login.ci/jwks \
+            -e AGENTOPS_AGENT_ISSUER=https://identity.ci -e AGENTOPS_AGENT_AUDIENCE=agentops \
+            -e AGENTOPS_AGENT_JWKS_URL=https://identity.ci/jwks \
+            -e AGENTOPS_SLO_SEED_FILE=/app/configs/slos.yaml \
+            agentops-slo-platform:ci
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8080/readyz && break; sleep 1
+          done
+          curl -sf http://localhost:8080/readyz
+          curl -sf http://localhost:8080/.well-known/agent-card.json | grep -q AgentOps
+          curl -sf http://localhost:8080/metrics | grep -q agentops_spans_ingested_total
+          status=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' --data '{"resourceSpans":[]}' \
+            http://localhost:8080/v1/traces)
+          test "$status" = "401"
+          docker inspect --format '{{.Config.User}}' agentops-slo-platform:ci | grep -q 10001
+          docker logs agentops
+      - name: Image vulnerability scan (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: agentops-slo-platform:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Image SBOM (Syft)
+        uses: anchore/sbom-action@v0.24.3
+        with:
+          image: agentops-slo-platform:ci
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+      - name: SBOM vulnerability gate (Grype)
+        uses: anchore/scan-action@v7.4.2
+        with:
+          sbom: sbom.cdx.json
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cdx.json
+
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.95.0
+    steps:
+      - uses: actions/checkout@v4
+      - run: semgrep scan --config p/python --config p/secrets --config p/dockerfile --error --metrics=off src Dockerfile

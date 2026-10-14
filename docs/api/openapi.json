@@ -1,0 +1,3234 @@
+{
+  "components": {
+    "schemas": {
+      "ActionStatus": {
+        "enum": [
+          "active",
+          "pending_approval",
+          "denied",
+          "rejected",
+          "expired"
+        ],
+        "title": "ActionStatus",
+        "type": "string"
+      },
+      "ActionTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SpanKind"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name"
+        ],
+        "title": "ActionTarget",
+        "type": "object"
+      },
+      "ActionType": {
+        "enum": [
+          "retry_policy.apply",
+          "circuit.open",
+          "circuit.close",
+          "agent.pause",
+          "budget.raise"
+        ],
+        "title": "ActionType",
+        "type": "string"
+      },
+      "AlertEventView": {
+        "properties": {
+          "at_ns": {
+            "title": "At Ns",
+            "type": "integer"
+          },
+          "long_burn": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Burn"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "short_burn": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Burn"
+          },
+          "slo_id": {
+            "title": "Slo Id",
+            "type": "string"
+          },
+          "transition": {
+            "title": "Transition",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slo_id",
+          "rule_id",
+          "severity",
+          "transition",
+          "at_ns",
+          "long_burn",
+          "short_burn"
+        ],
+        "title": "AlertEventView",
+        "type": "object"
+      },
+      "AlertHistory": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AlertEventView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AlertHistory",
+        "type": "object"
+      },
+      "CircuitRecommendation": {
+        "properties": {
+          "long_calls": {
+            "title": "Long Calls",
+            "type": "integer"
+          },
+          "long_error_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Error Rate"
+          },
+          "long_window_minutes": {
+            "title": "Long Window Minutes",
+            "type": "integer"
+          },
+          "min_calls": {
+            "title": "Min Calls",
+            "type": "integer"
+          },
+          "open_threshold": {
+            "title": "Open Threshold",
+            "type": "number"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "short_calls": {
+            "title": "Short Calls",
+            "type": "integer"
+          },
+          "short_error_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Error Rate"
+          },
+          "short_window_minutes": {
+            "title": "Short Window Minutes",
+            "type": "integer"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CircuitState"
+          }
+        },
+        "required": [
+          "state",
+          "short_window_minutes",
+          "long_window_minutes",
+          "short_calls",
+          "short_error_rate",
+          "long_calls",
+          "long_error_rate",
+          "open_threshold",
+          "min_calls",
+          "reason"
+        ],
+        "title": "CircuitRecommendation",
+        "type": "object"
+      },
+      "CircuitState": {
+        "enum": [
+          "closed",
+          "half_open",
+          "open"
+        ],
+        "title": "CircuitState",
+        "type": "string"
+      },
+      "CostGrouping": {
+        "enum": [
+          "agent",
+          "team",
+          "model",
+          "workflow"
+        ],
+        "title": "CostGrouping",
+        "type": "string"
+      },
+      "CostReport": {
+        "properties": {
+          "currency": {
+            "default": "USD",
+            "title": "Currency",
+            "type": "string"
+          },
+          "end_ns": {
+            "title": "End Ns",
+            "type": "integer"
+          },
+          "group_by": {
+            "$ref": "#/components/schemas/CostGrouping"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CostRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "start_ns": {
+            "title": "Start Ns",
+            "type": "integer"
+          },
+          "total_cost_usd": {
+            "title": "Total Cost Usd",
+            "type": "number"
+          }
+        },
+        "required": [
+          "group_by",
+          "start_ns",
+          "end_ns",
+          "total_cost_usd",
+          "rows"
+        ],
+        "title": "CostReport",
+        "type": "object"
+      },
+      "CostRow": {
+        "properties": {
+          "cached_input_tokens": {
+            "title": "Cached Input Tokens",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "model_calls": {
+            "title": "Model Calls",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "unpriced_calls": {
+            "description": "Model calls with tokens but no applicable price",
+            "title": "Unpriced Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "model_calls",
+          "input_tokens",
+          "output_tokens",
+          "cached_input_tokens",
+          "cost_usd",
+          "unpriced_calls"
+        ],
+        "title": "CostRow",
+        "type": "object"
+      },
+      "Decision-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Comment",
+            "type": "string"
+          }
+        },
+        "title": "Decision",
+        "type": "object"
+      },
+      "Decision-Output": {
+        "description": "Outcome of a policy or security evaluation.",
+        "enum": [
+          "allow",
+          "deny",
+          "require_approval"
+        ],
+        "title": "Decision",
+        "type": "string"
+      },
+      "DependencyStats": {
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "error_rate": {
+            "title": "Error Rate",
+            "type": "number"
+          },
+          "failures": {
+            "title": "Failures",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpanKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "p50_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P50 Ms"
+          },
+          "p95_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95 Ms"
+          },
+          "p99_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P99 Ms"
+          },
+          "retried_failures": {
+            "title": "Retried Failures",
+            "type": "integer"
+          },
+          "retry_success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Success Rate"
+          },
+          "retryable_failure_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retryable Failure Share"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "calls",
+          "failures",
+          "error_rate",
+          "retryable_failure_share",
+          "retried_failures",
+          "retry_success_rate",
+          "p50_ms",
+          "p95_ms",
+          "p99_ms"
+        ],
+        "title": "DependencyStats",
+        "type": "object"
+      },
+      "Diagnosis": {
+        "properties": {
+          "agent": {
+            "title": "Agent",
+            "type": "string"
+          },
+          "cost_usd": {
+            "minimum": 0.0,
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "ended_ns": {
+            "title": "Ended Ns",
+            "type": "integer"
+          },
+          "error_count": {
+            "minimum": 0.0,
+            "title": "Error Count",
+            "type": "integer"
+          },
+          "failure_class": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FailureClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input_tokens": {
+            "minimum": 0.0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "model_calls": {
+            "minimum": 0.0,
+            "title": "Model Calls",
+            "type": "integer"
+          },
+          "observed_failure_classes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FailureClass"
+            },
+            "title": "Observed Failure Classes",
+            "type": "array"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "output_tokens": {
+            "minimum": 0.0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "recovery": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RecoveryStrategy"
+            },
+            "title": "Recovery",
+            "type": "array"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "root_cause_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpanKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "root_cause_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Cause Name"
+          },
+          "root_cause_span_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Cause Span Id"
+          },
+          "span_count": {
+            "minimum": 0.0,
+            "title": "Span Count",
+            "type": "integer"
+          },
+          "started_ns": {
+            "title": "Started Ns",
+            "type": "integer"
+          },
+          "team": {
+            "title": "Team",
+            "type": "string"
+          },
+          "tool_calls": {
+            "minimum": 0.0,
+            "title": "Tool Calls",
+            "type": "integer"
+          },
+          "trace_id": {
+            "title": "Trace Id",
+            "type": "string"
+          },
+          "unpriced_model_calls": {
+            "minimum": 0.0,
+            "title": "Unpriced Model Calls",
+            "type": "integer"
+          },
+          "workflow": {
+            "title": "Workflow",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "workflow",
+          "agent",
+          "team",
+          "outcome",
+          "span_count",
+          "error_count",
+          "tool_calls",
+          "model_calls",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd",
+          "unpriced_model_calls",
+          "started_ns",
+          "ended_ns"
+        ],
+        "title": "Diagnosis",
+        "type": "object"
+      },
+      "Directives": {
+        "properties": {
+          "generated_at_ns": {
+            "title": "Generated At Ns",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecoveryAction"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "generated_at_ns"
+        ],
+        "title": "Directives",
+        "type": "object"
+      },
+      "EvaluationSummary": {
+        "properties": {
+          "evaluated": {
+            "title": "Evaluated",
+            "type": "integer"
+          },
+          "fired": {
+            "title": "Fired",
+            "type": "integer"
+          },
+          "notified": {
+            "title": "Notified",
+            "type": "boolean"
+          },
+          "resolved": {
+            "title": "Resolved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "evaluated",
+          "fired",
+          "resolved",
+          "notified"
+        ],
+        "title": "EvaluationSummary",
+        "type": "object"
+      },
+      "FailureClass": {
+        "enum": [
+          "guardrail_blocked",
+          "rate_limited",
+          "timeout",
+          "authorization_denied",
+          "budget_exceeded",
+          "loop_detected",
+          "tool_error",
+          "model_error",
+          "memory_error",
+          "agent_error",
+          "unknown"
+        ],
+        "title": "FailureClass",
+        "type": "string"
+      },
+      "FiringAlert": {
+        "properties": {
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "since_ns": {
+            "title": "Since Ns",
+            "type": "integer"
+          },
+          "slo_id": {
+            "title": "Slo Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slo_id",
+          "rule_id",
+          "severity",
+          "since_ns"
+        ],
+        "title": "FiringAlert",
+        "type": "object"
+      },
+      "FiringAlertList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FiringAlert"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "FiringAlertList",
+        "type": "object"
+      },
+      "GroupBy": {
+        "enum": [
+          "name",
+          "agent",
+          "team"
+        ],
+        "title": "GroupBy",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "OperationReport": {
+        "properties": {
+          "group_by": {
+            "$ref": "#/components/schemas/GroupBy"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SpanKind"
+          },
+          "latency_sample_limit": {
+            "description": "Percentiles use at most this many most-recent successful calls",
+            "title": "Latency Sample Limit",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/OperationRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "window_minutes": {
+            "title": "Window Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "group_by",
+          "window_minutes",
+          "latency_sample_limit",
+          "rows"
+        ],
+        "title": "OperationReport",
+        "type": "object"
+      },
+      "OperationRow": {
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "error_rate": {
+            "title": "Error Rate",
+            "type": "number"
+          },
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "p50_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P50 Ms"
+          },
+          "p95_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95 Ms"
+          },
+          "p99_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P99 Ms"
+          }
+        },
+        "required": [
+          "key",
+          "calls",
+          "errors",
+          "error_rate",
+          "p50_ms",
+          "p95_ms",
+          "p99_ms",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd"
+        ],
+        "title": "OperationRow",
+        "type": "object"
+      },
+      "OtlpPartialSuccess": {
+        "description": "OTLP ExportTraceServiceResponse in JSON form (protobuf for protobuf requests).",
+        "properties": {
+          "partialSuccess": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Partialsuccess"
+          }
+        },
+        "title": "OtlpPartialSuccess",
+        "type": "object"
+      },
+      "Outcome": {
+        "enum": [
+          "success",
+          "recovered",
+          "failed",
+          "incomplete"
+        ],
+        "title": "Outcome",
+        "type": "string"
+      },
+      "PriceEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "cached_input_per_mtok": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "USD per million cache-read input tokens",
+            "title": "Cached Input Per Mtok"
+          },
+          "effective_from_ns": {
+            "description": "Unix epoch nanoseconds",
+            "minimum": 0.0,
+            "title": "Effective From Ns",
+            "type": "integer"
+          },
+          "input_per_mtok": {
+            "description": "USD per million input tokens",
+            "minimum": 0.0,
+            "title": "Input Per Mtok",
+            "type": "number"
+          },
+          "model": {
+            "description": "gen_ai response/request model",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "output_per_mtok": {
+            "description": "USD per million output tokens",
+            "minimum": 0.0,
+            "title": "Output Per Mtok",
+            "type": "number"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          }
+        },
+        "required": [
+          "model",
+          "input_per_mtok",
+          "output_per_mtok",
+          "effective_from_ns"
+        ],
+        "title": "PriceEntry",
+        "type": "object"
+      },
+      "PriceList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PriceEntry"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PriceList",
+        "type": "object"
+      },
+      "ProposeAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ActionType"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 5,
+            "title": "Reason",
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ActionTarget"
+          },
+          "ttl_minutes": {
+            "default": 60,
+            "maximum": 10080.0,
+            "minimum": 1.0,
+            "title": "Ttl Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "action",
+          "target",
+          "reason"
+        ],
+        "title": "ProposeAction",
+        "type": "object"
+      },
+      "RecoveryAction": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ActionType"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "decided_ns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided Ns"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/Decision-Output"
+          },
+          "expires_ns": {
+            "title": "Expires Ns",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "matched_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Rules",
+            "type": "array"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "policy_digest": {
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "proposed_by": {
+            "title": "Proposed By",
+            "type": "string"
+          },
+          "proposed_ns": {
+            "title": "Proposed Ns",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActionStatus"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ActionTarget"
+          },
+          "ttl_minutes": {
+            "title": "Ttl Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "target",
+          "parameters",
+          "reason",
+          "risk",
+          "status",
+          "decision",
+          "matched_rules",
+          "policy_version",
+          "policy_digest",
+          "proposed_by",
+          "proposed_ns",
+          "expires_ns",
+          "ttl_minutes"
+        ],
+        "title": "RecoveryAction",
+        "type": "object"
+      },
+      "RecoveryActionList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecoveryAction"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "RecoveryActionList",
+        "type": "object"
+      },
+      "RecoveryRecommendation": {
+        "properties": {
+          "circuit": {
+            "$ref": "#/components/schemas/CircuitRecommendation"
+          },
+          "retry_policy": {
+            "$ref": "#/components/schemas/RetryPolicy"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/DependencyStats"
+          }
+        },
+        "required": [
+          "stats",
+          "retry_policy",
+          "circuit"
+        ],
+        "title": "RecoveryRecommendation",
+        "type": "object"
+      },
+      "RecoveryStrategy": {
+        "enum": [
+          "retry_with_backoff",
+          "retry_honoring_retry_after",
+          "failover_to_alternate_dependency",
+          "open_circuit_on_dependency",
+          "fix_input_no_retry",
+          "escalate_to_human_review",
+          "terminate_and_cap_iterations",
+          "raise_budget_with_approval",
+          "check_agent_grants_no_retry"
+        ],
+        "title": "RecoveryStrategy",
+        "type": "string"
+      },
+      "RetryPolicy": {
+        "properties": {
+          "backoff_multiplier": {
+            "minimum": 1.0,
+            "title": "Backoff Multiplier",
+            "type": "number"
+          },
+          "initial_backoff_ms": {
+            "minimum": 0.0,
+            "title": "Initial Backoff Ms",
+            "type": "integer"
+          },
+          "jitter": {
+            "default": "full",
+            "title": "Jitter",
+            "type": "string"
+          },
+          "max_attempts": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "max_backoff_ms": {
+            "minimum": 0.0,
+            "title": "Max Backoff Ms",
+            "type": "integer"
+          },
+          "per_attempt_timeout_ms": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Per Attempt Timeout Ms"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "max_attempts",
+          "initial_backoff_ms",
+          "backoff_multiplier",
+          "max_backoff_ms",
+          "rationale"
+        ],
+        "title": "RetryPolicy",
+        "type": "object"
+      },
+      "RiskLevel": {
+        "description": "Action risk tier. Ordered so policies can compare with ``>=``.",
+        "enum": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "title": "RiskLevel",
+        "type": "integer"
+      },
+      "RuleEvaluation": {
+        "properties": {
+          "factor": {
+            "title": "Factor",
+            "type": "number"
+          },
+          "firing": {
+            "title": "Firing",
+            "type": "boolean"
+          },
+          "long_burn": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Long Burn"
+          },
+          "long_window": {
+            "title": "Long Window",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "short_burn": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Burn"
+          },
+          "short_window": {
+            "title": "Short Window",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "severity",
+          "factor",
+          "long_window",
+          "short_window",
+          "long_burn",
+          "short_burn",
+          "firing"
+        ],
+        "title": "RuleEvaluation",
+        "type": "object"
+      },
+      "Selector": {
+        "additionalProperties": false,
+        "description": "Which events count toward an SLI. Unset fields match everything.",
+        "properties": {
+          "agent": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpanKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Span kind; ignored for workflows"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tool, model, memory operation, agent or workflow name",
+            "title": "Name"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team"
+          }
+        },
+        "title": "Selector",
+        "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "page",
+          "ticket"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "SliType": {
+        "enum": [
+          "availability",
+          "latency",
+          "workflow_success"
+        ],
+        "title": "SliType",
+        "type": "string"
+      },
+      "SloDefinition": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Slug, e.g. claims-triage-tool-availability",
+            "title": "Id",
+            "type": "string"
+          },
+          "latency_threshold_ms": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 3600000.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Threshold Ms"
+          },
+          "min_events": {
+            "default": 10,
+            "description": "Windows with fewer events are treated as no data and never alert",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Min Events",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Name",
+            "type": "string"
+          },
+          "objective": {
+            "description": "Target good-event ratio, e.g. 0.995",
+            "exclusiveMaximum": 1.0,
+            "exclusiveMinimum": 0.5,
+            "title": "Objective",
+            "type": "number"
+          },
+          "owner": {
+            "description": "Team accountable for the SLO",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Owner",
+            "type": "string"
+          },
+          "selector": {
+            "$ref": "#/components/schemas/Selector"
+          },
+          "sli": {
+            "$ref": "#/components/schemas/SliType"
+          },
+          "window_days": {
+            "default": 30,
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sli",
+          "objective",
+          "owner"
+        ],
+        "title": "SloDefinition",
+        "type": "object"
+      },
+      "SloHealth": {
+        "enum": [
+          "ok",
+          "warning",
+          "critical",
+          "no_data"
+        ],
+        "title": "SloHealth",
+        "type": "string"
+      },
+      "SloList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SloDefinition"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SloList",
+        "type": "object"
+      },
+      "SloStatus": {
+        "properties": {
+          "bad_events": {
+            "title": "Bad Events",
+            "type": "integer"
+          },
+          "error_budget_remaining": {
+            "description": "1.0 = untouched, 0 = exhausted, negative = overspent",
+            "title": "Error Budget Remaining",
+            "type": "number"
+          },
+          "evaluated_at_ns": {
+            "title": "Evaluated At Ns",
+            "type": "integer"
+          },
+          "health": {
+            "$ref": "#/components/schemas/SloHealth"
+          },
+          "objective": {
+            "title": "Objective",
+            "type": "number"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleEvaluation"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "sli": {
+            "$ref": "#/components/schemas/SliType"
+          },
+          "sli_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Good-event ratio over the SLO window",
+            "title": "Sli Value"
+          },
+          "slo_id": {
+            "title": "Slo Id",
+            "type": "string"
+          },
+          "time_to_exhaustion_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "At the 1-hour burn rate; None when not burning",
+            "title": "Time To Exhaustion Hours"
+          },
+          "total_events": {
+            "title": "Total Events",
+            "type": "integer"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/WindowBurn"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "slo_id",
+          "sli",
+          "objective",
+          "window_days",
+          "health",
+          "total_events",
+          "bad_events",
+          "sli_value",
+          "error_budget_remaining",
+          "time_to_exhaustion_hours",
+          "windows",
+          "rules",
+          "evaluated_at_ns"
+        ],
+        "title": "SloStatus",
+        "type": "object"
+      },
+      "SpanKind": {
+        "enum": [
+          "agent",
+          "tool",
+          "model",
+          "memory",
+          "workflow",
+          "other"
+        ],
+        "title": "SpanKind",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WindowBurn": {
+        "properties": {
+          "bad": {
+            "title": "Bad",
+            "type": "integer"
+          },
+          "burn_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None when below min_events",
+            "title": "Burn Rate"
+          },
+          "error_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Ratio"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "window": {
+            "title": "Window",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "total",
+          "bad",
+          "error_ratio",
+          "burn_rate"
+        ],
+        "title": "WindowBurn",
+        "type": "object"
+      },
+      "WorkflowList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Diagnosis"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "WorkflowList",
+        "type": "object"
+      },
+      "WorkflowView": {
+        "properties": {
+          "diagnosis": {
+            "$ref": "#/components/schemas/Diagnosis"
+          },
+          "finalized": {
+            "description": "False while spans may still arrive (provisional)",
+            "title": "Finalized",
+            "type": "boolean"
+          },
+          "trace_id": {
+            "title": "Trace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trace_id",
+          "finalized",
+          "diagnosis"
+        ],
+        "title": "WorkflowView",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "OTLP ingestion of agent traces (GenAI semantic conventions), agent/tool/memory/workflow metrics, token and cost attribution, multi-window multi-burn-rate SLO alerting, workflow failure classification and policy-gated recovery actions.",
+    "title": "AgentOps SLO Platform",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/.well-known/agent-card.json": {
+      "get": {
+        "operationId": "card__well_known_agent_card_json_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Card  Well Known Agent Card Json Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Card",
+        "tags": [
+          "discovery"
+        ]
+      }
+    },
+    "/a2a": {
+      "post": {
+        "description": "A2A JSON-RPC 2.0 endpoint (``message/send``).",
+        "operationId": "a2a_a2a_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response A2A A2A Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A2A",
+        "tags": [
+          "a2a"
+        ]
+      }
+    },
+    "/v1/alerts": {
+      "get": {
+        "operationId": "firing_alerts_v1_alerts_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiringAlertList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Firing Alerts",
+        "tags": [
+          "slo"
+        ]
+      }
+    },
+    "/v1/alerts/history": {
+      "get": {
+        "operationId": "alert_history_v1_alerts_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "slo_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[a-z0-9]([a-z0-9\\-]{0,62}[a-z0-9])?$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Slo Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Alert History",
+        "tags": [
+          "slo"
+        ]
+      }
+    },
+    "/v1/costs": {
+      "get": {
+        "operationId": "costs_v1_costs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CostGrouping",
+              "default": "team"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start_ns",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4611686018427387904,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Ns"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end_ns",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4611686018427387904,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Ns"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Costs",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
+    "/v1/operations": {
+      "get": {
+        "operationId": "operations_v1_operations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SpanKind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/GroupBy",
+              "default": "name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "window_minutes",
+            "required": false,
+            "schema": {
+              "default": 60,
+              "maximum": 10080,
+              "minimum": 1,
+              "title": "Window Minutes",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Operations",
+        "tags": [
+          "metrics"
+        ]
+      }
+    },
+    "/v1/pricing": {
+      "get": {
+        "operationId": "list_prices_v1_pricing_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Prices",
+        "tags": [
+          "costs"
+        ]
+      },
+      "put": {
+        "operationId": "put_price_v1_pricing_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceEntry"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceEntry"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Price",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
+    "/v1/recovery/actions": {
+      "get": {
+        "operationId": "list_actions_v1_recovery_actions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ActionStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryActionList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Actions",
+        "tags": [
+          "recovery"
+        ]
+      },
+      "post": {
+        "operationId": "propose_v1_recovery_actions_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposeAction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryAction"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Propose",
+        "tags": [
+          "recovery"
+        ]
+      }
+    },
+    "/v1/recovery/actions/{action_id}": {
+      "get": {
+        "operationId": "get_action_v1_recovery_actions__action_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Action Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryAction"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Action",
+        "tags": [
+          "recovery"
+        ]
+      }
+    },
+    "/v1/recovery/actions/{action_id}/approve": {
+      "post": {
+        "operationId": "approve_v1_recovery_actions__action_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Action Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision-Input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryAction"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve",
+        "tags": [
+          "recovery"
+        ]
+      }
+    },
+    "/v1/recovery/actions/{action_id}/reject": {
+      "post": {
+        "operationId": "reject_v1_recovery_actions__action_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Action Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision-Input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryAction"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject",
+        "tags": [
+          "recovery"
+        ]
+      }
+    },
+    "/v1/recovery/directives": {
+      "get": {
+        "description": "Active recovery directives for agent runtimes and gateways to apply.",
+        "operationId": "directives_v1_recovery_directives_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Directives"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Directives",
+        "tags": [
+          "recovery"
+        ]
+      }
+    },
+    "/v1/recovery/recommendations": {
+      "get": {
+        "operationId": "recommendations_v1_recovery_recommendations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SpanKind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryRecommendation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recommendations",
+        "tags": [
+          "recovery"
+        ]
+      }
+    },
+    "/v1/slos": {
+      "get": {
+        "operationId": "list_slos_v1_slos_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SloList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Slos",
+        "tags": [
+          "slo"
+        ]
+      }
+    },
+    "/v1/slos/{slo_id}": {
+      "delete": {
+        "operationId": "delete_slo_v1_slos__slo_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slo_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9]([a-z0-9\\-]{0,62}[a-z0-9])?$",
+              "title": "Slo Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Slo",
+        "tags": [
+          "slo"
+        ]
+      },
+      "get": {
+        "operationId": "get_slo_v1_slos__slo_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slo_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9]([a-z0-9\\-]{0,62}[a-z0-9])?$",
+              "title": "Slo Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SloDefinition"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Slo",
+        "tags": [
+          "slo"
+        ]
+      },
+      "put": {
+        "operationId": "put_slo_v1_slos__slo_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slo_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9]([a-z0-9\\-]{0,62}[a-z0-9])?$",
+              "title": "Slo Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SloDefinition"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SloDefinition"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Slo",
+        "tags": [
+          "slo"
+        ]
+      }
+    },
+    "/v1/slos/{slo_id}/prometheus-rules": {
+      "get": {
+        "operationId": "slo_rules_v1_slos__slo_id__prometheus_rules_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slo_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9]([a-z0-9\\-]{0,62}[a-z0-9])?$",
+              "title": "Slo Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Slo Rules V1 Slos  Slo Id  Prometheus Rules Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Slo Rules",
+        "tags": [
+          "slo"
+        ]
+      }
+    },
+    "/v1/slos/{slo_id}/status": {
+      "get": {
+        "operationId": "slo_status_v1_slos__slo_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slo_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[a-z0-9]([a-z0-9\\-]{0,62}[a-z0-9])?$",
+              "title": "Slo Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SloStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Slo Status",
+        "tags": [
+          "slo"
+        ]
+      }
+    },
+    "/v1/slos:evaluate": {
+      "post": {
+        "operationId": "evaluate_slos_v1_slos_evaluate_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluate Slos",
+        "tags": [
+          "slo"
+        ]
+      }
+    },
+    "/v1/traces": {
+      "post": {
+        "description": "OTLP/HTTP trace export (protobuf or JSON, optionally gzip).",
+        "operationId": "ingest_traces_v1_traces_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            },
+            "application/x-protobuf": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtlpPartialSuccess"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ingest Traces",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/v1/workflows": {
+      "get": {
+        "operationId": "list_workflows_v1_workflows_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "outcome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Outcome"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Outcome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "workflow",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Workflow"
+            }
+          },
+          {
+            "in": "query",
+            "name": "hours",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "maximum": 840,
+              "minimum": 1,
+              "title": "Hours",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Workflows",
+        "tags": [
+          "workflows"
+        ]
+      }
+    },
+    "/v1/workflows/{trace_id}": {
+      "get": {
+        "operationId": "get_workflow_v1_workflows__trace_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trace_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Trace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Workflow",
+        "tags": [
+          "workflows"
+        ]
+      }
+    }
+  }
+}

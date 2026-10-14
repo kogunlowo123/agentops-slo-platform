@@ -1,0 +1,83 @@
+{
+  "$defs": {
+    "ActionTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SpanKind"
+        },
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "ActionTarget",
+      "type": "object"
+    },
+    "ActionType": {
+      "enum": [
+        "retry_policy.apply",
+        "circuit.open",
+        "circuit.close",
+        "agent.pause",
+        "budget.raise"
+      ],
+      "title": "ActionType",
+      "type": "string"
+    },
+    "SpanKind": {
+      "enum": [
+        "agent",
+        "tool",
+        "model",
+        "memory",
+        "workflow",
+        "other"
+      ],
+      "title": "SpanKind",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/propose-action.request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/ActionType"
+    },
+    "parameters": {
+      "additionalProperties": true,
+      "title": "Parameters",
+      "type": "object"
+    },
+    "reason": {
+      "maxLength": 1000,
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    },
+    "target": {
+      "$ref": "#/$defs/ActionTarget"
+    },
+    "ttl_minutes": {
+      "default": 60,
+      "maximum": 10080,
+      "minimum": 1,
+      "title": "Ttl Minutes",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "action",
+    "target",
+    "reason"
+  ],
+  "title": "ProposeAction",
+  "type": "object"
+}

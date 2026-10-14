@@ -1,0 +1,216 @@
+{
+  "$defs": {
+    "SpanKind": {
+      "enum": [
+        "agent",
+        "tool",
+        "model",
+        "memory",
+        "workflow",
+        "other"
+      ],
+      "title": "SpanKind",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/span-fact.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "What the platform keeps about a span. No prompt or completion content.",
+  "properties": {
+    "agent": {
+      "title": "Agent",
+      "type": "string"
+    },
+    "cached_input_tokens": {
+      "default": 0,
+      "title": "Cached Input Tokens",
+      "type": "integer"
+    },
+    "cost_usd": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cost Usd"
+    },
+    "end_ns": {
+      "title": "End Ns",
+      "type": "integer"
+    },
+    "error_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Message"
+    },
+    "error_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Type"
+    },
+    "finish_reasons": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Finish Reasons",
+      "type": "array"
+    },
+    "http_status": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Http Status"
+    },
+    "ingested_by": {
+      "default": "",
+      "title": "Ingested By",
+      "type": "string"
+    },
+    "input_tokens": {
+      "default": 0,
+      "title": "Input Tokens",
+      "type": "integer"
+    },
+    "is_error": {
+      "title": "Is Error",
+      "type": "boolean"
+    },
+    "kind": {
+      "$ref": "#/$defs/SpanKind"
+    },
+    "model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Model"
+    },
+    "name": {
+      "description": "Tool, model, memory operation, agent or workflow name",
+      "title": "Name",
+      "type": "string"
+    },
+    "operation": {
+      "title": "Operation",
+      "type": "string"
+    },
+    "output_tokens": {
+      "default": 0,
+      "title": "Output Tokens",
+      "type": "integer"
+    },
+    "parent_span_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Parent Span Id"
+    },
+    "provider": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provider"
+    },
+    "retry_attempt": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retry Attempt"
+    },
+    "service": {
+      "title": "Service",
+      "type": "string"
+    },
+    "span_id": {
+      "title": "Span Id",
+      "type": "string"
+    },
+    "start_ns": {
+      "title": "Start Ns",
+      "type": "integer"
+    },
+    "team": {
+      "title": "Team",
+      "type": "string"
+    },
+    "trace_id": {
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "workflow": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Workflow"
+    }
+  },
+  "required": [
+    "trace_id",
+    "span_id",
+    "parent_span_id",
+    "kind",
+    "name",
+    "operation",
+    "agent",
+    "team",
+    "service",
+    "start_ns",
+    "end_ns",
+    "is_error"
+  ],
+  "title": "SpanFact",
+  "type": "object"
+}

@@ -1,0 +1,87 @@
+# Local development stack: platform + PostgreSQL + an OIDC provider that plays
+# both the operator IdP (issuer "operators") and the agent credential issuer
+# (issuer "agents"), + an OpenTelemetry Collector that receives agent traces
+# on 4317/4318 and forwards them to the platform's OTLP endpoint.
+#
+# The collector authenticates to the platform with the OAuth2 client
+# credentials grant against the mock "agents" issuer, which mints a token
+# carrying scope agentops:traces.ingest. In production the collector presents
+# a credential from agent-identity-fabric instead (deployments/otel-collector).
+#
+# Uses an in-memory audit signing key (AGENTOPS_DEV_EPHEMERAL_KEYS); never use
+# this configuration outside a developer workstation.
+name: agentops-slo-platform
+
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: agentops
+      POSTGRES_USER: agentops
+      POSTGRES_PASSWORD: agentops-local-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentops -d agentops"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  oidc:
+    image: ghcr.io/navikt/mock-oauth2-server:2.1.10
+    environment:
+      SERVER_PORT: "8080"
+      JSON_CONFIG: >-
+        {"interactiveLogin": false,
+         "tokenCallbacks": [
+           {"issuerId": "agents", "tokenExpiry": 600,
+            "requestMappings": [{"requestParam": "client_id", "match": "otel-collector",
+              "claims": {"sub": "otel-collector", "aud": ["agentops"],
+                         "scope": "agentops:traces.ingest"}}]},
+           {"issuerId": "operators", "tokenExpiry": 3600,
+            "requestMappings": [{"requestParam": "client_id", "match": "*",
+              "claims": {"sub": "developer", "aud": ["agentops-operators"],
+                         "roles": ["agentops-sre", "agentops-finops", "agentops-viewer"]}}]}
+         ]}
+    ports:
+      - "8081:8080"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    depends_on:
+      agentops:
+        condition: service_started
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./deployments/docker/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+
+  agentops:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      oidc:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      AGENTOPS_ENVIRONMENT: development
+      AGENTOPS_DEV_EPHEMERAL_KEYS: "true"
+      AGENTOPS_PUBLIC_URL: http://localhost:8080
+      AGENTOPS_DATABASE_URL: postgresql+asyncpg://agentops:agentops-local-only@postgres:5432/agentops
+      AGENTOPS_AUDIT_LOG_PATH: /var/lib/agentops/audit/audit.jsonl
+      AGENTOPS_OPERATOR_ISSUER: http://oidc:8080/operators
+      AGENTOPS_OPERATOR_AUDIENCE: agentops-operators
+      AGENTOPS_OPERATOR_JWKS_URL: http://oidc:8080/operators/jwks
+      AGENTOPS_AGENT_ISSUER: http://oidc:8080/agents
+      AGENTOPS_AGENT_AUDIENCE: agentops
+      AGENTOPS_AGENT_JWKS_URL: http://oidc:8080/agents/jwks
+      AGENTOPS_SLO_SEED_FILE: /app/configs/slos.yaml
+      AGENTOPS_WORKFLOW_QUIET_S: "10"
+      AGENTOPS_EVALUATION_INTERVAL_S: "30"
+      AGENTOPS_LOG_LEVEL: DEBUG
+
+volumes:
+  pgdata:

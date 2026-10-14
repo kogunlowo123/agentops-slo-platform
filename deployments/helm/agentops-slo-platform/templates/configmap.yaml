@@ -1,0 +1,65 @@
+{{- $a := .Values.agentops -}}
+{{- $f := .Values.fabric -}}
+{{- $l := .Values.agentAuth -}}
+{{- if and (not $f.url) (not (and $l.issuer $l.audience $l.jwksUrl)) }}
+{{- fail "agent authorization requires fabric.url or all of agentAuth.issuer, agentAuth.audience, agentAuth.jwksUrl" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "agentops.fullname" . }}
+  labels: {{- include "agentops.labels" . | nindent 4 }}
+data:
+  AGENTOPS_ENVIRONMENT: {{ $a.environment | quote }}
+  AGENTOPS_PUBLIC_URL: {{ required "agentops.publicUrl is required" $a.publicUrl | quote }}
+  AGENTOPS_AUDIT_KEY_FILE: {{ printf "/etc/agentops/audit-key/%s" (required "secrets.auditKeyFile is required" .Values.secrets.auditKeyFile) | quote }}
+  AGENTOPS_OPERATOR_ISSUER: {{ required "operator.issuer is required" .Values.operator.issuer | quote }}
+  AGENTOPS_OPERATOR_AUDIENCE: {{ required "operator.audience is required" .Values.operator.audience | quote }}
+  AGENTOPS_OPERATOR_JWKS_URL: {{ required "operator.jwksUrl is required" .Values.operator.jwksUrl | quote }}
+  AGENTOPS_OPERATOR_ROLES_CLAIM: {{ .Values.operator.rolesClaim | quote }}
+  {{- if $f.url }}
+  AGENTOPS_FABRIC_URL: {{ $f.url | quote }}
+  {{- with $f.agentId }}
+  AGENTOPS_FABRIC_AGENT_ID: {{ . | quote }}
+  AGENTOPS_WORKLOAD_TOKEN_FILE: /var/run/secrets/agentops/workload/token
+  {{- end }}
+  {{- else }}
+  AGENTOPS_AGENT_ISSUER: {{ $l.issuer | quote }}
+  AGENTOPS_AGENT_AUDIENCE: {{ $l.audience | quote }}
+  AGENTOPS_AGENT_JWKS_URL: {{ $l.jwksUrl | quote }}
+  {{- end }}
+  {{- if .Values.slos }}
+  AGENTOPS_SLO_SEED_FILE: /etc/agentops/slos/slos.yaml
+  {{- end }}
+  {{- with $a.alertmanagerUrl }}
+  AGENTOPS_ALERTMANAGER_URL: {{ . | quote }}
+  {{- end }}
+  {{- with $a.otlpEndpoint }}
+  AGENTOPS_OTLP_ENDPOINT: {{ . | quote }}
+  {{- end }}
+  AGENTOPS_MCP_ALLOWED_HOSTS: {{ $a.mcpAllowedHosts | toJson | quote }}
+  AGENTOPS_DECISION_CACHE_TTL_S: {{ $a.decisionCacheTtlSeconds | quote }}
+  AGENTOPS_RETENTION_DAYS: {{ $a.retentionDays | quote }}
+  AGENTOPS_WORKFLOW_QUIET_S: {{ $a.workflowQuietSeconds | quote }}
+  AGENTOPS_WORKFLOW_MAX_WAIT_S: {{ $a.workflowMaxWaitSeconds | quote }}
+  AGENTOPS_LOOP_THRESHOLD: {{ $a.loopThreshold | quote }}
+  AGENTOPS_EVALUATION_INTERVAL_S: {{ $a.evaluationIntervalSeconds | quote }}
+  AGENTOPS_FINALIZE_INTERVAL_S: {{ $a.finalizeIntervalSeconds | quote }}
+  AGENTOPS_PURGE_INTERVAL_S: {{ $a.purgeIntervalSeconds | quote }}
+  AGENTOPS_MAX_BODY_BYTES: {{ $a.maxBodyBytes | int64 | quote }}
+  AGENTOPS_MAX_INFLATED_BYTES: {{ $a.maxInflatedBytes | int64 | quote }}
+  AGENTOPS_MAX_SPANS_PER_REQUEST: {{ $a.maxSpansPerRequest | int64 | quote }}
+  AGENTOPS_MAX_FUTURE_SKEW_S: {{ $a.maxFutureSkewSeconds | quote }}
+  AGENTOPS_METRIC_LABEL_LIMIT: {{ $a.metricLabelLimit | quote }}
+  AGENTOPS_LOG_LEVEL: {{ $a.logLevel | quote }}
+{{- if .Values.slos }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "agentops.fullname" . }}-slos
+  labels: {{- include "agentops.labels" . | nindent 4 }}
+data:
+  slos.yaml: |
+    {{- dict "slos" .Values.slos | toYaml | nindent 4 }}
+{{- end }}

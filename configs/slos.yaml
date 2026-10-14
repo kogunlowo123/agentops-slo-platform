@@ -1,0 +1,51 @@
+# Baseline SLOs created at start-up when AGENTOPS_SLO_SEED_FILE points here.
+# Seeding never overwrites an SLO that already exists, so objectives tuned
+# through PUT /v1/slos/{id} survive restarts. Latency thresholds are
+# histogram bucket bounds (see observability/metrics.py) so the same SLOs can
+# also be exported as Prometheus rules (GET /v1/slos/{id}/prometheus-rules).
+slos:
+  - id: agent-invocation-availability
+    name: Agent invocations succeed
+    description: Share of invoke_agent spans that complete without error.
+    sli: availability
+    selector: {kind: agent}
+    objective: 0.99
+    window_days: 30
+    owner: agent-platform-sre
+
+  - id: tool-call-availability
+    name: Tool calls succeed
+    description: Share of execute_tool spans that complete without error, across all tools.
+    sli: availability
+    selector: {kind: tool}
+    objective: 0.995
+    window_days: 30
+    owner: agent-platform-sre
+
+  - id: model-call-latency
+    name: Model calls finish within 10 seconds
+    description: Share of model calls (chat, completion, embeddings) under 10 s and not failed.
+    sli: latency
+    selector: {kind: model}
+    objective: 0.95
+    latency_threshold_ms: 10000
+    window_days: 30
+    owner: agent-platform-sre
+
+  - id: memory-operation-latency
+    name: Memory operations finish within 500 ms
+    description: Share of memory and vector-store operations under 500 ms and not failed.
+    sli: latency
+    selector: {kind: memory}
+    objective: 0.99
+    latency_threshold_ms: 500
+    window_days: 30
+    owner: agent-platform-sre
+
+  - id: workflow-success
+    name: Agent workflows succeed
+    description: Share of workflow runs (traces) classified success or recovered.
+    sli: workflow_success
+    objective: 0.98
+    window_days: 30
+    owner: agent-platform-sre

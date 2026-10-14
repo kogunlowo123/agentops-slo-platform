@@ -1,0 +1,67 @@
+{
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/price-entry.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cached_input_per_mtok": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "USD per million cache-read input tokens",
+      "title": "Cached Input Per Mtok"
+    },
+    "effective_from_ns": {
+      "description": "Unix epoch nanoseconds",
+      "minimum": 0,
+      "title": "Effective From Ns",
+      "type": "integer"
+    },
+    "input_per_mtok": {
+      "description": "USD per million input tokens",
+      "minimum": 0,
+      "title": "Input Per Mtok",
+      "type": "number"
+    },
+    "model": {
+      "description": "gen_ai response/request model",
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Model",
+      "type": "string"
+    },
+    "output_per_mtok": {
+      "description": "USD per million output tokens",
+      "minimum": 0,
+      "title": "Output Per Mtok",
+      "type": "number"
+    },
+    "provider": {
+      "anyOf": [
+        {
+          "maxLength": 120,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provider"
+    }
+  },
+  "required": [
+    "model",
+    "input_per_mtok",
+    "output_per_mtok",
+    "effective_from_ns"
+  ],
+  "title": "PriceEntry",
+  "type": "object"
+}

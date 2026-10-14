@@ -1,0 +1,156 @@
+# PrometheusRule-compatible alert rules for the platform itself. Load with the
+# Prometheus Operator (wrap in a PrometheusRule) or a rule_files entry.
+# Agent SLOs are generated per SLO by GET /v1/slos/{id}/prometheus-rules.
+#
+# Platform SLOs (docs/architecture/agent-specification.md):
+#   ingestion availability  99.9% of POST /v1/traces requests are non-5xx (30 days)
+#   ingestion latency       p99 POST /v1/traces < 1 s
+# Burn-rate alerting: multi-window, multi-burn-rate (Google SRE Workbook);
+# for 99.9% over 30 days the error budget is 0.001 and the factors are
+# 14.4 (1h/5m) and 6 (6h/30m) for paging, 3 (1d/2h) and 1 (3d/6h) for tickets.
+groups:
+  - name: agentops-slo-platform.recording
+    interval: 30s
+    rules:
+      - record: agentops:ingest_errors:ratio_rate5m
+        expr: |
+          sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces",status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces"}[5m])), 1e-9)
+      - record: agentops:ingest_errors:ratio_rate30m
+        expr: |
+          sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces",status=~"5.."}[30m]))
+          /
+          clamp_min(sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces"}[30m])), 1e-9)
+      - record: agentops:ingest_errors:ratio_rate1h
+        expr: |
+          sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces",status=~"5.."}[1h]))
+          /
+          clamp_min(sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces"}[1h])), 1e-9)
+      - record: agentops:ingest_errors:ratio_rate2h
+        expr: |
+          sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces",status=~"5.."}[2h]))
+          /
+          clamp_min(sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces"}[2h])), 1e-9)
+      - record: agentops:ingest_errors:ratio_rate6h
+        expr: |
+          sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces",status=~"5.."}[6h]))
+          /
+          clamp_min(sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces"}[6h])), 1e-9)
+      - record: agentops:ingest_errors:ratio_rate1d
+        expr: |
+          sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces",status=~"5.."}[1d]))
+          /
+          clamp_min(sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces"}[1d])), 1e-9)
+      - record: agentops:ingest_errors:ratio_rate3d
+        expr: |
+          sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces",status=~"5.."}[3d]))
+          /
+          clamp_min(sum(rate(agentops_http_request_duration_seconds_count{route="/v1/traces"}[3d])), 1e-9)
+
+  - name: agentops-slo-platform.slo
+    rules:
+      - alert: AgentOpsIngestBudgetBurnFast
+        expr: |
+          agentops:ingest_errors:ratio_rate1h > (14.4 * 0.001)
+          and
+          agentops:ingest_errors:ratio_rate5m > (14.4 * 0.001)
+        labels: {severity: page}
+        annotations:
+          summary: Trace ingestion burning error budget 14.4x faster than sustainable (1h/5m)
+          runbook: docs/runbooks/incident-response.md#ingestion-errors
+
+      - alert: AgentOpsIngestBudgetBurnFast
+        expr: |
+          agentops:ingest_errors:ratio_rate6h > (6 * 0.001)
+          and
+          agentops:ingest_errors:ratio_rate30m > (6 * 0.001)
+        labels: {severity: page}
+        annotations:
+          summary: Trace ingestion burning error budget 6x faster than sustainable (6h/30m)
+          runbook: docs/runbooks/incident-response.md#ingestion-errors
+
+      - alert: AgentOpsIngestBudgetBurnSlow
+        expr: |
+          agentops:ingest_errors:ratio_rate1d > (3 * 0.001)
+          and
+          agentops:ingest_errors:ratio_rate2h > (3 * 0.001)
+        labels: {severity: ticket}
+        annotations:
+          summary: Trace ingestion burning error budget 3x faster than sustainable (1d/2h)
+          runbook: docs/runbooks/incident-response.md#ingestion-errors
+
+      - alert: AgentOpsIngestBudgetBurnSlow
+        expr: |
+          agentops:ingest_errors:ratio_rate3d > (1 * 0.001)
+          and
+          agentops:ingest_errors:ratio_rate6h > (1 * 0.001)
+        labels: {severity: ticket}
+        annotations:
+          summary: Trace ingestion spending error budget at or above the sustainable rate (3d/6h)
+          runbook: docs/runbooks/incident-response.md#ingestion-errors
+
+      - alert: AgentOpsIngestLatencyHigh
+        expr: |
+          histogram_quantile(0.99, sum by (le) (
+            rate(agentops_http_request_duration_seconds_bucket{route="/v1/traces"}[5m])
+          )) > 1
+        for: 10m
+        labels: {severity: ticket}
+        annotations:
+          summary: p99 POST /v1/traces above 1 s
+          runbook: docs/runbooks/monitoring.md#latency
+
+  - name: agentops-slo-platform.pipeline
+    rules:
+      - alert: AgentOpsSpansRejectedSpike
+        expr: |
+          sum(rate(agentops_spans_rejected_total[10m]))
+          /
+          clamp_min(sum(rate(agentops_spans_ingested_total[10m])) + sum(rate(agentops_spans_rejected_total[10m])), 1e-9)
+          > 0.05
+        for: 15m
+        labels: {severity: ticket}
+        annotations:
+          summary: More than 5% of exported spans are rejected (clock skew, malformed IDs, retention)
+          runbook: docs/runbooks/monitoring.md#rejected-spans
+
+      - alert: AgentOpsLabelCardinalityOverflow
+        expr: max by (label) (agentops_label_overflow) > 0
+        for: 5m
+        labels: {severity: ticket}
+        annotations:
+          summary: "Label {{ $labels.label }} exceeded the cardinality limit; values fold into 'other'"
+          runbook: docs/runbooks/monitoring.md#label-overflow
+
+      - alert: AgentOpsAlertDeliveryFailing
+        expr: increase(agentops_alert_notifications_failed_total[15m]) > 0
+        for: 15m
+        labels: {severity: page}
+        annotations:
+          summary: Burn-rate alerts cannot be delivered to Alertmanager
+          runbook: docs/runbooks/slo-burn-rate.md#alert-delivery
+
+      - alert: AgentOpsBackgroundJobFailing
+        expr: sum by (loop) (increase(agentops_background_failures_total[15m])) > 2
+        for: 10m
+        labels: {severity: page}
+        annotations:
+          summary: "Background job {{ $labels.loop }} is failing repeatedly"
+          runbook: docs/runbooks/incident-response.md#background-jobs
+
+      - alert: AgentOpsUnpricedModelCalls
+        expr: sum by (model) (increase(agentops_unpriced_model_calls_total[1h])) > 0
+        for: 1h
+        labels: {severity: ticket}
+        annotations:
+          summary: "Model {{ $labels.model }} is used without a configured price; spend is under-reported"
+          runbook: docs/runbooks/cost-attribution.md#unpriced-models
+
+      - alert: AgentOpsReplicasDown
+        expr: sum(up{job="agentops-slo-platform"}) < 2
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: Fewer than two platform replicas are being scraped
+          runbook: docs/runbooks/incident-response.md#replicas-down

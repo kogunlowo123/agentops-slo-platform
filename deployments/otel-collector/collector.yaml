@@ -1,0 +1,100 @@
+# Production OpenTelemetry Collector (gateway) for agent telemetry, GCP primary.
+#
+# Agents and agent frameworks export OTLP to this gateway. It strips prompt,
+# completion and tool-argument content (the platform never stores content),
+# groups spans by trace so each trace reaches the platform whole (span
+# attribution and workflow classification resolve within one batch), and
+# exports to two destinations:
+#   - otlphttp/agentops: the AgentOps SLO platform (/v1/traces), authenticated
+#     with the collector's own agent credential (scope agentops:traces.ingest)
+#     mounted from a Kubernetes Secret at /var/run/secrets/agentops/token;
+#     bearertokenauth re-reads the file when the credential is rotated;
+#   - googlecloud: Cloud Trace, using the collector's own GCP service account
+#     through GKE Workload Identity (deployments/terraform/gcp).
+#
+# Team attribution: k8sattributes identifies the exporting pod by its
+# connection and copies the namespace label agentops.io/team into the resource
+# attribute agentops.team, so cost attribution relies on cluster metadata the
+# platform team controls rather than on what an agent claims about itself.
+# The collector's service account needs get/list/watch on pods, namespaces and
+# replicasets.
+#
+# Required environment:
+#   AGENTOPS_ENDPOINT     base URL of the platform, e.g. the in-cluster Service
+#   GOOGLE_CLOUD_PROJECT  project receiving Cloud Trace spans
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  bearertokenauth/agentops:
+    filename: /var/run/secrets/agentops/token
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 16
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 20
+  k8sattributes:
+    auth_type: serviceAccount
+    passthrough: false
+    pod_association:
+      - sources:
+          - from: connection
+    extract:
+      metadata: [k8s.namespace.name, k8s.pod.name, k8s.deployment.name]
+      labels:
+        - tag_name: agentops.team
+          key: agentops.io/team
+          from: namespace
+  attributes/scrub:
+    actions:
+      - {key: gen_ai.prompt, action: delete}
+      - {key: gen_ai.completion, action: delete}
+      - {key: gen_ai.input.messages, action: delete}
+      - {key: gen_ai.output.messages, action: delete}
+      - {key: gen_ai.system_instructions, action: delete}
+      - {key: gen_ai.tool.call.arguments, action: delete}
+      - {key: gen_ai.tool.call.result, action: delete}
+      - {key: http.request.header.authorization, action: delete}
+  groupbytrace:
+    wait_duration: 10s
+    num_traces: 100000
+  batch:
+    send_batch_size: 2048
+    send_batch_max_size: 8192
+    timeout: 5s
+
+exporters:
+  otlphttp/agentops:
+    endpoint: ${env:AGENTOPS_ENDPOINT}
+    compression: gzip
+    timeout: 10s
+    auth:
+      authenticator: bearertokenauth/agentops
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 4
+      queue_size: 5000
+  googlecloud:
+    project: ${env:GOOGLE_CLOUD_PROJECT}
+
+service:
+  extensions: [health_check, bearertokenauth/agentops]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, k8sattributes, attributes/scrub, groupbytrace, batch]
+      exporters: [otlphttp/agentops, googlecloud]

@@ -1,0 +1,269 @@
+{
+  "$defs": {
+    "CircuitRecommendation": {
+      "properties": {
+        "long_calls": {
+          "title": "Long Calls",
+          "type": "integer"
+        },
+        "long_error_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Long Error Rate"
+        },
+        "long_window_minutes": {
+          "title": "Long Window Minutes",
+          "type": "integer"
+        },
+        "min_calls": {
+          "title": "Min Calls",
+          "type": "integer"
+        },
+        "open_threshold": {
+          "title": "Open Threshold",
+          "type": "number"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "short_calls": {
+          "title": "Short Calls",
+          "type": "integer"
+        },
+        "short_error_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Short Error Rate"
+        },
+        "short_window_minutes": {
+          "title": "Short Window Minutes",
+          "type": "integer"
+        },
+        "state": {
+          "$ref": "#/$defs/CircuitState"
+        }
+      },
+      "required": [
+        "state",
+        "short_window_minutes",
+        "long_window_minutes",
+        "short_calls",
+        "short_error_rate",
+        "long_calls",
+        "long_error_rate",
+        "open_threshold",
+        "min_calls",
+        "reason"
+      ],
+      "title": "CircuitRecommendation",
+      "type": "object"
+    },
+    "CircuitState": {
+      "enum": [
+        "closed",
+        "half_open",
+        "open"
+      ],
+      "title": "CircuitState",
+      "type": "string"
+    },
+    "DependencyStats": {
+      "properties": {
+        "calls": {
+          "title": "Calls",
+          "type": "integer"
+        },
+        "error_rate": {
+          "title": "Error Rate",
+          "type": "number"
+        },
+        "failures": {
+          "title": "Failures",
+          "type": "integer"
+        },
+        "kind": {
+          "$ref": "#/$defs/SpanKind"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "p50_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P50 Ms"
+        },
+        "p95_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P95 Ms"
+        },
+        "p99_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P99 Ms"
+        },
+        "retried_failures": {
+          "title": "Retried Failures",
+          "type": "integer"
+        },
+        "retry_success_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry Success Rate"
+        },
+        "retryable_failure_share": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retryable Failure Share"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "calls",
+        "failures",
+        "error_rate",
+        "retryable_failure_share",
+        "retried_failures",
+        "retry_success_rate",
+        "p50_ms",
+        "p95_ms",
+        "p99_ms"
+      ],
+      "title": "DependencyStats",
+      "type": "object"
+    },
+    "RetryPolicy": {
+      "properties": {
+        "backoff_multiplier": {
+          "minimum": 1,
+          "title": "Backoff Multiplier",
+          "type": "number"
+        },
+        "initial_backoff_ms": {
+          "minimum": 0,
+          "title": "Initial Backoff Ms",
+          "type": "integer"
+        },
+        "jitter": {
+          "default": "full",
+          "title": "Jitter",
+          "type": "string"
+        },
+        "max_attempts": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "max_backoff_ms": {
+          "minimum": 0,
+          "title": "Max Backoff Ms",
+          "type": "integer"
+        },
+        "per_attempt_timeout_ms": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Per Attempt Timeout Ms"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "max_attempts",
+        "initial_backoff_ms",
+        "backoff_multiplier",
+        "max_backoff_ms",
+        "rationale"
+      ],
+      "title": "RetryPolicy",
+      "type": "object"
+    },
+    "SpanKind": {
+      "enum": [
+        "agent",
+        "tool",
+        "model",
+        "memory",
+        "workflow",
+        "other"
+      ],
+      "title": "SpanKind",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/recovery-recommendation.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "circuit": {
+      "$ref": "#/$defs/CircuitRecommendation"
+    },
+    "retry_policy": {
+      "$ref": "#/$defs/RetryPolicy"
+    },
+    "stats": {
+      "$ref": "#/$defs/DependencyStats"
+    }
+  },
+  "required": [
+    "stats",
+    "retry_policy",
+    "circuit"
+  ],
+  "title": "RecoveryRecommendation",
+  "type": "object"
+}

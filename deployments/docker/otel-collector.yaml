@@ -1,0 +1,53 @@
+# Local development collector (docker-compose.yml). Receives OTLP from agents
+# and forwards traces to the platform's OTLP/HTTP endpoint using a token from
+# the mock OIDC issuer (client credentials). Production configuration:
+# deployments/otel-collector/collector.yaml.
+extensions:
+  oauth2client:
+    client_id: otel-collector
+    client_secret: local-development-only
+    token_url: http://oidc:8080/agents/token
+    scopes: ["agentops:traces.ingest"]
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  attributes/scrub:
+    actions:
+      - {key: gen_ai.prompt, action: delete}
+      - {key: gen_ai.completion, action: delete}
+      - {key: gen_ai.input.messages, action: delete}
+      - {key: gen_ai.output.messages, action: delete}
+      - {key: gen_ai.system_instructions, action: delete}
+      - {key: gen_ai.tool.call.arguments, action: delete}
+      - {key: gen_ai.tool.call.result, action: delete}
+      - {key: http.request.header.authorization, action: delete}
+  groupbytrace:
+    wait_duration: 5s
+  batch: {}
+
+exporters:
+  otlphttp/agentops:
+    traces_endpoint: http://agentops:8080/v1/traces
+    compression: gzip
+    auth:
+      authenticator: oauth2client
+  debug:
+    verbosity: basic
+
+service:
+  extensions: [oauth2client]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/scrub, groupbytrace, batch]
+      exporters: [otlphttp/agentops, debug]

@@ -1,0 +1,172 @@
+replicaCount: 3
+
+image:
+  repository: ghcr.io/kogunlowo123/agentops-slo-platform
+  tag: ""  # defaults to .Chart.AppVersion
+  digest: ""  # set to pin an immutable sha256 digest; takes precedence over tag
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: agentops-slo-platform
+  # Cloud workload identity bindings, e.g.
+  #   iam.gke.io/gcp-service-account (GKE Workload Identity)
+  #   eks.amazonaws.com/role-arn (AWS IRSA)
+  #   azure.workload.identity/client-id (Azure Workload ID)
+  annotations: {}
+
+podLabels: {}
+
+# Deployment-specific values marked REQUIRED have no default; the chart
+# refuses to render until they are set (helm install --values <env>.yaml).
+agentops:
+  environment: production
+  publicUrl: ""  # REQUIRED: external HTTPS URL of the platform (A2A agent card url)
+  logLevel: INFO
+  otlpEndpoint: ""  # optional OTLP gRPC endpoint for the platform's own traces
+  alertmanagerUrl: ""  # optional Alertmanager base URL (POST /api/v2/alerts)
+  retentionDays: 35
+  workflowQuietSeconds: 30
+  workflowMaxWaitSeconds: 900
+  loopThreshold: 25
+  evaluationIntervalSeconds: 60
+  finalizeIntervalSeconds: 10
+  purgeIntervalSeconds: 3600
+  decisionCacheTtlSeconds: 15
+  maxBodyBytes: 8388608
+  maxInflatedBytes: 33554432
+  maxSpansPerRequest: 10000
+  maxFutureSkewSeconds: 600
+  metricLabelLimit: 500
+  # Host headers accepted by /mcp (DNS-rebinding protection); empty disables.
+  mcpAllowedHosts: []
+
+# Human operators: enterprise OIDC provider issuing tokens with the roles
+# agentops-viewer, agentops-sre and agentops-finops.
+operator:
+  issuer: ""  # REQUIRED
+  audience: ""  # REQUIRED
+  jwksUrl: ""  # REQUIRED
+  rolesClaim: roles
+
+# Agent callers are authorized by agent-identity-fabric when fabric.url is
+# set; otherwise agentAuth (issuer, audience, JWKS) plus the local policy
+# decides. One of the two is REQUIRED.
+fabric:
+  url: ""
+  # This platform's own registered agent identity. When set, the pod gets a
+  # projected service-account token with workloadAudience and exchanges it
+  # (RFC 7523 jwt-bearer) for a fabric credential used toward Alertmanager.
+  agentId: ""
+  workloadAudience: identity-fabric
+agentAuth:
+  issuer: ""
+  audience: ""
+  jwksUrl: ""
+
+# Baseline SLOs seeded at start-up (existing definitions are never overwritten).
+# Mirrors configs/slos.yaml; set to [] to disable seeding.
+slos:
+  - id: agent-invocation-availability
+    name: Agent invocations succeed
+    description: Share of invoke_agent spans that complete without error.
+    sli: availability
+    selector: {kind: agent}
+    objective: 0.99
+    window_days: 30
+    owner: agent-platform-sre
+  - id: tool-call-availability
+    name: Tool calls succeed
+    description: Share of execute_tool spans that complete without error, across all tools.
+    sli: availability
+    selector: {kind: tool}
+    objective: 0.995
+    window_days: 30
+    owner: agent-platform-sre
+  - id: model-call-latency
+    name: Model calls finish within 10 seconds
+    description: Share of model calls (chat, completion, embeddings) under 10 s and not failed.
+    sli: latency
+    selector: {kind: model}
+    objective: 0.95
+    latency_threshold_ms: 10000
+    window_days: 30
+    owner: agent-platform-sre
+  - id: memory-operation-latency
+    name: Memory operations finish within 500 ms
+    description: Share of memory and vector-store operations under 500 ms and not failed.
+    sli: latency
+    selector: {kind: memory}
+    objective: 0.99
+    latency_threshold_ms: 500
+    window_days: 30
+    owner: agent-platform-sre
+  - id: workflow-success
+    name: Agent workflows succeed
+    description: Share of workflow runs (traces) classified success or recovered.
+    sli: workflow_success
+    objective: 0.98
+    window_days: 30
+    owner: agent-platform-sre
+
+# Secrets are created by the platform secret operator (External Secrets,
+# Secrets Store CSI) from the cloud secret manager provisioned by Terraform.
+secrets:
+  # Secret holding key DATABASE_URL (postgresql+asyncpg://...).
+  database: agentops-slo-platform-database
+  # Secret holding audit-<kid>.pem, the Ed25519 audit signing key.
+  auditKey: agentops-slo-platform-audit-key
+  auditKeyFile: ""  # REQUIRED: file name of the audit key within secrets.auditKey
+
+audit:
+  storageClassName: ""
+  size: 20Gi
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""  # required when ingress.enabled
+  tlsSecret: agentops-slo-platform-tls
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  minAvailable: 2
+
+networkPolicy:
+  enabled: true
+  # Namespaces whose pods (agents, gateways, the OTel collector) may call the platform.
+  allowedNamespaceLabels:
+    agent-platform/member: "true"
+  monitoringNamespaceLabels:
+    kubernetes.io/metadata.name: observability
+  ingressNamespaceLabels:
+    kubernetes.io/metadata.name: ingress-nginx
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+
+nodeSelector: {}
+tolerations: []
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway

@@ -1,0 +1,234 @@
+{
+  "$defs": {
+    "RuleEvaluation": {
+      "properties": {
+        "factor": {
+          "title": "Factor",
+          "type": "number"
+        },
+        "firing": {
+          "title": "Firing",
+          "type": "boolean"
+        },
+        "long_burn": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Long Burn"
+        },
+        "long_window": {
+          "title": "Long Window",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "short_burn": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Short Burn"
+        },
+        "short_window": {
+          "title": "Short Window",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "severity",
+        "factor",
+        "long_window",
+        "short_window",
+        "long_burn",
+        "short_burn",
+        "firing"
+      ],
+      "title": "RuleEvaluation",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "page",
+        "ticket"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "SliType": {
+      "enum": [
+        "availability",
+        "latency",
+        "workflow_success"
+      ],
+      "title": "SliType",
+      "type": "string"
+    },
+    "SloHealth": {
+      "enum": [
+        "ok",
+        "warning",
+        "critical",
+        "no_data"
+      ],
+      "title": "SloHealth",
+      "type": "string"
+    },
+    "WindowBurn": {
+      "properties": {
+        "bad": {
+          "title": "Bad",
+          "type": "integer"
+        },
+        "burn_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "None when below min_events",
+          "title": "Burn Rate"
+        },
+        "error_ratio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error Ratio"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        },
+        "window": {
+          "title": "Window",
+          "type": "string"
+        }
+      },
+      "required": [
+        "window",
+        "total",
+        "bad",
+        "error_ratio",
+        "burn_rate"
+      ],
+      "title": "WindowBurn",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/slo-status.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "bad_events": {
+      "title": "Bad Events",
+      "type": "integer"
+    },
+    "error_budget_remaining": {
+      "description": "1.0 = untouched, 0 = exhausted, negative = overspent",
+      "title": "Error Budget Remaining",
+      "type": "number"
+    },
+    "evaluated_at_ns": {
+      "title": "Evaluated At Ns",
+      "type": "integer"
+    },
+    "health": {
+      "$ref": "#/$defs/SloHealth"
+    },
+    "objective": {
+      "title": "Objective",
+      "type": "number"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/RuleEvaluation"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "sli": {
+      "$ref": "#/$defs/SliType"
+    },
+    "sli_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Good-event ratio over the SLO window",
+      "title": "Sli Value"
+    },
+    "slo_id": {
+      "title": "Slo Id",
+      "type": "string"
+    },
+    "time_to_exhaustion_hours": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "At the 1-hour burn rate; None when not burning",
+      "title": "Time To Exhaustion Hours"
+    },
+    "total_events": {
+      "title": "Total Events",
+      "type": "integer"
+    },
+    "window_days": {
+      "title": "Window Days",
+      "type": "integer"
+    },
+    "windows": {
+      "items": {
+        "$ref": "#/$defs/WindowBurn"
+      },
+      "title": "Windows",
+      "type": "array"
+    }
+  },
+  "required": [
+    "slo_id",
+    "sli",
+    "objective",
+    "window_days",
+    "health",
+    "total_events",
+    "bad_events",
+    "sli_value",
+    "error_budget_remaining",
+    "time_to_exhaustion_hours",
+    "windows",
+    "rules",
+    "evaluated_at_ns"
+  ],
+  "title": "SloStatus",
+  "type": "object"
+}

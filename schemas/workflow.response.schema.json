@@ -1,0 +1,238 @@
+{
+  "$defs": {
+    "Diagnosis": {
+      "properties": {
+        "agent": {
+          "title": "Agent",
+          "type": "string"
+        },
+        "cost_usd": {
+          "minimum": 0,
+          "title": "Cost Usd",
+          "type": "number"
+        },
+        "ended_ns": {
+          "title": "Ended Ns",
+          "type": "integer"
+        },
+        "error_count": {
+          "minimum": 0,
+          "title": "Error Count",
+          "type": "integer"
+        },
+        "failure_class": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FailureClass"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "input_tokens": {
+          "minimum": 0,
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "model_calls": {
+          "minimum": 0,
+          "title": "Model Calls",
+          "type": "integer"
+        },
+        "observed_failure_classes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FailureClass"
+          },
+          "title": "Observed Failure Classes",
+          "type": "array"
+        },
+        "outcome": {
+          "$ref": "#/$defs/Outcome"
+        },
+        "output_tokens": {
+          "minimum": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "recovery": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RecoveryStrategy"
+          },
+          "title": "Recovery",
+          "type": "array"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "root_cause_kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SpanKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "root_cause_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Root Cause Name"
+        },
+        "root_cause_span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Root Cause Span Id"
+        },
+        "span_count": {
+          "minimum": 0,
+          "title": "Span Count",
+          "type": "integer"
+        },
+        "started_ns": {
+          "title": "Started Ns",
+          "type": "integer"
+        },
+        "team": {
+          "title": "Team",
+          "type": "string"
+        },
+        "tool_calls": {
+          "minimum": 0,
+          "title": "Tool Calls",
+          "type": "integer"
+        },
+        "trace_id": {
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "unpriced_model_calls": {
+          "minimum": 0,
+          "title": "Unpriced Model Calls",
+          "type": "integer"
+        },
+        "workflow": {
+          "title": "Workflow",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trace_id",
+        "workflow",
+        "agent",
+        "team",
+        "outcome",
+        "span_count",
+        "error_count",
+        "tool_calls",
+        "model_calls",
+        "input_tokens",
+        "output_tokens",
+        "cost_usd",
+        "unpriced_model_calls",
+        "started_ns",
+        "ended_ns"
+      ],
+      "title": "Diagnosis",
+      "type": "object"
+    },
+    "FailureClass": {
+      "enum": [
+        "guardrail_blocked",
+        "rate_limited",
+        "timeout",
+        "authorization_denied",
+        "budget_exceeded",
+        "loop_detected",
+        "tool_error",
+        "model_error",
+        "memory_error",
+        "agent_error",
+        "unknown"
+      ],
+      "title": "FailureClass",
+      "type": "string"
+    },
+    "Outcome": {
+      "enum": [
+        "success",
+        "recovered",
+        "failed",
+        "incomplete"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "RecoveryStrategy": {
+      "enum": [
+        "retry_with_backoff",
+        "retry_honoring_retry_after",
+        "failover_to_alternate_dependency",
+        "open_circuit_on_dependency",
+        "fix_input_no_retry",
+        "escalate_to_human_review",
+        "terminate_and_cap_iterations",
+        "raise_budget_with_approval",
+        "check_agent_grants_no_retry"
+      ],
+      "title": "RecoveryStrategy",
+      "type": "string"
+    },
+    "SpanKind": {
+      "enum": [
+        "agent",
+        "tool",
+        "model",
+        "memory",
+        "workflow",
+        "other"
+      ],
+      "title": "SpanKind",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/kogunlowo123/agentops-slo-platform/schemas/workflow.response.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "diagnosis": {
+      "$ref": "#/$defs/Diagnosis"
+    },
+    "finalized": {
+      "description": "False while spans may still arrive (provisional)",
+      "title": "Finalized",
+      "type": "boolean"
+    },
+    "trace_id": {
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "trace_id",
+    "finalized",
+    "diagnosis"
+  ],
+  "title": "WorkflowView",
+  "type": "object"
+}
