@@ -19,7 +19,7 @@ jobs:
       matrix:
         python: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
@@ -57,7 +57,7 @@ jobs:
     env:
       AGENTOPS_TEST_DATABASE_URL: postgresql+asyncpg://agentops:ci-only@localhost:5432/agentops
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0
       - run: uv sync --frozen
       - run: uv run pytest tests/integration -m integration --no-cov -ra
@@ -65,7 +65,7 @@ jobs:
   deploy-artifacts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: azure/setup-helm@v4
         with:
           version: v3.16.2
@@ -113,7 +113,7 @@ jobs:
   container:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build image
         run: docker build -t agentops-slo-platform:ci .
       - name: Container smoke test (starts, reports ready, enforces auth)
@@ -171,5 +171,5 @@ jobs:
     container:
       image: semgrep/semgrep:1.95.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: semgrep scan --config p/python --config p/secrets --config p/dockerfile --error --metrics=off src Dockerfile
