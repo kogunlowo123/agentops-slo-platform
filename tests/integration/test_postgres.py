@@ -108,7 +108,7 @@ async def test_span_and_workflow_stores_round_trip() -> None:
     assert await workflows.recent(outcome=None, workflow=diagnosis.workflow, since_ns=0, limit=5)
     wf_slo = SloDefinition(
         id="pg-wf",
-        name="wf",
+        name="workflow runs succeed",
         sli=SliType.WORKFLOW_SUCCESS,
         objective=0.9,
         owner="ci",
